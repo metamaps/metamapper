@@ -10,7 +10,8 @@ var metamapsRedirectUri = process.env.PROTOCOL + '://' + process.env.DOMAIN + me
 var slackTokenUrl = 'https://slack.com/api/oauth.access';
 var request = require('request');
 var mongoose = require('mongoose');
-var metamapBot = function () {}; //require('slacker');
+var metamapBot = require('slacker');
+var bots = {}; // will store the bot instances that are running
 mongoose.connect(process.env.DB);
 
 var db = mongoose.connection;
@@ -27,19 +28,36 @@ var Team = mongoose.model('Team', {
 });
 var Token = mongoose.model('Token', { 
   access_token: String,
-  user: String
+  key: String,
+  user_id: String,
+  team_id: String
 });
 
+// Initialize
 Team.find(function (err, teams) {
   if (err) {
     console.log(err);
     return;
   }
-  teams.forEach(startBotForTeam);
+  teams.forEach(function (team) {
+    Token.find({ team_id: team.get('team_id') }, function (err, tokens) {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      var userTokens = {};
+      tokens.forEach(function (t) { if (t.get('access_token'))  userTokens[t.get('user_id')] = t.get('access_token') });
+      startBotForTeam(team, userTokens);
+    });
+  });
 });
 
-function startBotForTeam(team) {
- metamapBot(team, Token, authUrl); 
+function startBotForTeam(team, tokens) {
+  var toPassIn = {
+    bot_access_token: team.get('bot_access_token'),
+    bot_user_id: team.get('bot_user_id')
+  };
+  bots[team.get('team_id')] = metamapBot(team, tokens || {}, authUrl); // returns the addTokenForUser function
 }
 
 app.get('/', function (req, res) {
@@ -52,8 +70,10 @@ app.get(authRoute, function (req, res) {
 });
 app.get(metamapsOauthRoute, function (req, res) {
     var code = req.query.code;
-    var userId = req.query.id;
-    var redirect_uri = process.env.PROTOCOL + '://' + process.env.DOMAIN + req.path
+    var key = req.query.id;
+    var userId = key.substring(9);
+    var teamId = key.slice(0, 9);
+    var redirect_uri = process.env.PROTOCOL + '://' + process.env.DOMAIN + req.path + '?id=' + key;
     var options = {
       uri: metamapsTokenUrl,
       form: {
@@ -71,11 +91,15 @@ app.get(metamapsOauthRoute, function (req, res) {
         return; // redirect and show error
       }
       body = JSON.parse(body);
+      if (!body.access_token) return res.send('There was an error');
       var token = new Token({ 
         access_token: body.access_token,
-        user: userId
+        key: key,
+        user_id: userId,
+        team_id: teamId
       });
       token.save();
+      bots[teamId](userId, body.access_token);
       res.send('ok, you can now make use of metamapper authenticated as yourself!'); // do a redirect here
     });
  
