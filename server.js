@@ -10,7 +10,7 @@ var metamapsRedirectUri = process.env.PROTOCOL + '://' + process.env.DOMAIN + me
 var slackTokenUrl = 'https://slack.com/api/oauth.access';
 var request = require('request');
 var mongoose = require('mongoose');
-var metamapBot = require('slacker');
+var metamapBot = require('create-from-slack');
 var bots = {}; // will store the bot instances that are running
 mongoose.connect(process.env.DB);
 
