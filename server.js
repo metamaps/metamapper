@@ -94,13 +94,14 @@ app.get(metamapsOauthRoute, function (req, res) {
         grant_type: 'authorization_code'
       }
     };
-
+    console.log(options);
     request.post(options, function (err, response, body) {
       if (err) {
         console.log(err);
         return; // redirect and show error
       }
       body = JSON.parse(body);
+      console.log(body);
       if (!body.access_token) return res.send('There was an error');
       var token = new Token({ 
         access_token: body.access_token,
