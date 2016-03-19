@@ -57,7 +57,17 @@ function startBotForTeam(team, tokens) {
     bot_access_token: team.get('bot_access_token'),
     bot_user_id: team.get('bot_user_id')
   };
-  bots[team.get('team_id')] = metamapBot(team, tokens || {}, authUrl); // returns the addTokenForUser function
+  var persistToken = function (userId, token) {
+    var t = new Token({
+      access_token: token,
+      key: team.get('team_id') + userId,
+      user_id: userId,
+      team_id: team.get('team_id')
+    });
+    t.save();
+  };
+  
+  bots[team.get('team_id')] = metamapBot(team, tokens || {}, authUrl, persistToken); // returns the addTokenForUser function
 }
 
 app.get('/', function (req, res) {
