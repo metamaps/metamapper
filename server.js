@@ -71,7 +71,7 @@ function startBotForTeam(team, tokens) {
 }
 
 app.get('/', function (req, res) {
-  res.send('metamapper! <a href="https://slack.com/oauth/authorize?scope=bot&client_id=3623920013.22798462514&redirect_uri=http://localhost:9000/slack/confirm"><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>');
+  res.send('metamapper! <a href="https://slack.com/oauth/authorize?scope=bot&client_id=3623920013.22798462514&redirect_uri=' + process.env.HOST + '://' + process.env.DOMAIN + '/slack/confirm"><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>');
 });
 
 app.get(authRoute, function (req, res) {
