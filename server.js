@@ -3,8 +3,9 @@ var express = require('express');
 var app = express();
 var authRoute = '/sign_in';
 var authUrl = process.env.PROTOCOL + '://' + process.env.DOMAIN + authRoute;
-var metamapsSignInUrl = process.env.METAMAPS_URL + '/oauth/authorize';
-var metamapsTokenUrl = process.env.METAMAPS_URL + '/oauth/token';
+var METAMAPS_URL = process.env.METAMAPS_URL;
+var metamapsSignInUrl = METAMAPS_URL + '/oauth/authorize';
+var metamapsTokenUrl = METAMAPS_URL + '/oauth/token';
 var metamapsOauthRoute = '/metamaps/confirm';
 var metamapsRedirectUri = process.env.PROTOCOL + '://' + process.env.DOMAIN + metamapsOauthRoute;
 var slackTokenUrl = 'https://slack.com/api/oauth.access';
@@ -67,7 +68,7 @@ function startBotForTeam(team, tokens) {
     t.save();
   };
   
-  bots[team.get('team_id')] = metamapBot(team, tokens || {}, authUrl, persistToken); // returns the addTokenForUser function
+  bots[team.get('team_id')] = metamapBot(toPassIn, tokens || {}, authUrl, METAMAPS_URL, persistToken); // returns the addTokenForUser function
 }
 
 app.get('/', function (req, res) {
