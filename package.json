@@ -2,7 +2,7 @@
   "name": "metamapper",
   "version": "0.0.1",
   "dependencies": {
-    "create-from-slack": "metamaps/create-from-slack#7adea1c4",
+    "create-from-slack": "metamaps/create-from-slack#7adea1c",
     "dotenv": "^2.0.0",
     "express": "^4.13.4",
     "mongoose": "^4.4.8",
