@@ -20,14 +20,15 @@ db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
 // we're connected!
 
-var Team = mongoose.model('Team', { 
+var Team = mongoose.model('Team', {
   access_token: String,
   team_name: String,
   team_id: String,
   bot_user_id: String,
-  bot_access_token: String
+  bot_access_token: String,
+  project_map_id: String
 });
-var Token = mongoose.model('Token', { 
+var Token = mongoose.model('Token', {
   access_token: String,
   key: String,
   user_id: String,
@@ -55,6 +56,7 @@ Team.find(function (err, teams) {
 
 function startBotForTeam(team, tokens) {
   var toPassIn = {
+    name: team.get('name'),
     bot_access_token: team.get('bot_access_token'),
     bot_user_id: team.get('bot_user_id')
   };
@@ -67,8 +69,13 @@ function startBotForTeam(team, tokens) {
     });
     t.save();
   };
-  
-  bots[team.get('team_id')] = metamapBot(toPassIn, tokens || {}, authUrl, METAMAPS_URL, persistToken); // returns the addTokenForUser function
+
+  var persistProjectMap = function (projectMapId) {
+    team.project_map_id = projectMapId
+    team.save()
+  };
+
+  bots[team.get('team_id')] = metamapBot(toPassIn, team.get('project_map_id'), persistProjectMap, tokens || {}, authUrl, METAMAPS_URL, persistToken); // returns the addTokenForUser function
 }
 
 app.get('/', function (req, res) {
@@ -104,7 +111,7 @@ app.get(metamapsOauthRoute, function (req, res) {
       body = JSON.parse(body);
       console.log(body);
       if (!body.access_token) return res.send('There was an error');
-      var token = new Token({ 
+      var token = new Token({
         access_token: body.access_token,
         key: key,
         user_id: userId,
@@ -114,7 +121,7 @@ app.get(metamapsOauthRoute, function (req, res) {
       bots[teamId](userId, body.access_token);
       res.send('ok, you can now make use of metamapper authenticated as yourself!'); // do a redirect here
     });
- 
+
 });
 
 app.get('/slack/confirm', function (req, res) {
