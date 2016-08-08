@@ -56,7 +56,7 @@ Team.find(function (err, teams) {
 
 function startBotForTeam(team, tokens) {
   var toPassIn = {
-    name: team.get('name'),
+    name: team.get('team_name'),
     bot_access_token: team.get('bot_access_token'),
     bot_user_id: team.get('bot_user_id')
   };
