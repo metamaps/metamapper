@@ -1,6 +1,9 @@
 {
   "name": "metamapper",
   "version": "0.0.1",
+  "engines": {
+    "node": "6.2.2"
+  },
   "dependencies": {
     "create-from-slack": "metamaps/create-from-slack#74975de",
     "dotenv": "^2.0.0",
