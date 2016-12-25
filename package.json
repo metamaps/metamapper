@@ -5,7 +5,7 @@
     "node": "6.2.2"
   },
   "dependencies": {
-    "create-from-slack": "metamaps/create-from-slack#74975de",
+    "create-from-slack": "metamaps/create-from-slack#2104627",
     "dotenv": "^2.0.0",
     "express": "^4.13.4",
     "mongoose": "^4.4.8",
