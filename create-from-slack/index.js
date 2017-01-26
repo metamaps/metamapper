@@ -87,9 +87,10 @@ module.exports = function (team, projectMapId, setProjectMap, dbTokens, authUrl,
       latest: reaction.item.ts,
       inclusive: true,
       count: 1
-    }).then(() => {
+    }).then(resp => {
+      console.log(resp)
       var message = channel.getMessageByTs(reaction.item.ts)
-      console.log(message)
+      console.log('msg', message)
     })
   });
 
