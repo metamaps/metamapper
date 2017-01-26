@@ -2,9 +2,8 @@
 
 steps
 
-1. `npm install --save create-from-slack`
-2. require in this module
-3. call the function that this module exports with the following:
+1. require in this module
+2. call the function that this module exports with the following:
 
 ```
 var Bot = require('create-from-slack');
@@ -21,8 +20,8 @@ var tokens = {
 };
 
 // you must be running some kind of server that can verify as an authorized application to the metamaps instance
-// you wish to integrate with. 
-// users will be directed to this URL, and then redirected to authorize with metamaps, 
+// you wish to integrate with.
+// users will be directed to this URL, and then redirected to authorize with metamaps,
 // if they don't have a token
 var signInUrl = 'https://metamapper.herokuapp.com/sign_in';
 

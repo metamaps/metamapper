@@ -5,6 +5,7 @@
     "node": "6.2.2"
   },
   "dependencies": {
+    "@slack/client": "^2.2.1",
     "dotenv": "^2.0.0",
     "express": "^4.13.4",
     "mongoose": "^4.4.8",
