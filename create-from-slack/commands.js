@@ -399,9 +399,14 @@ module.exports = function (web, rtm, tokens, users, persistToken, botId, METAMAP
     }).then(resp => {
       if (!resp.ok) return
       const message = resp.messages[0]
+      // TODO: set this up to use any metacode
+      // TODO: set this up so it recommends the topic get
+      // created in metamaps as the person who made the original message
+      // FOR now, create the topic as the person who added the reaction
+      // otherwise we kinda violate data policy
       postTopicsToMetamaps([
         { metacode_id: metacodesForChannel[reaction.item.channel], name: message.text }
-      ], message.user, reaction.item.channel, message.ts)
+      ], reaction.user, reaction.item.channel, message.ts)
     })
   }
 
