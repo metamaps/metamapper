@@ -388,7 +388,8 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
     if (firstChar === 'C') {
       endpoint = teamWebClient.channels
     } else if (firstChar === 'G') {
-      endpoint = channel._modelName === 'MPDM' ? teamWebClient.mpdm : teamWebclient.groups
+      console.log(channel)
+      endpoint = channel._modelName === 'MPDM' ? teamWebClient.mpdm : teamWebClient.groups
     } else if (firstChar === 'D') {
       endpoint = teamWebClient.dm
     }
