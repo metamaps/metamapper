@@ -173,6 +173,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
         if (!id) {
           return rtm.sendMessage('There is no map set for this channel', message.channel);
         }
+        web.reactions.add('thumbsup', {channel: channel, timestamp: timestamp})
         Metamaps.getMap(id, tokens[message.user], function (err, map) {
           if (err) {
             return rtm.sendMessage('There was an error fetching the map for this channel', message.channel);
@@ -229,7 +230,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
             return rtm.sendMessage('there was an error creating the map', message.channel);
           }
           mapsForChannel[message.channel] = mapId;
-          rtm.sendMessage('new map was created with id ' + mapId + ' and set for mapping', message.channel);
+          web.chat.postMessage(message.channel, 'Here is your new map: <' + METAMAPS_URL + '/maps/' + mapId + '|'+ message.text.substring(11) +'> (ID = ' + mapId + ')');
         });
       }
     },
