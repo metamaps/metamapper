@@ -39,6 +39,10 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
     })
   }
 
+  function linkWithMapName(id, name) {
+    return '<' + METAMAPS_URL + '/maps/' + id + '|'+ name +'>'
+  }
+
   var COMMANDS = [
     {
       cmd: "start capture",
@@ -178,7 +182,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
           if (err) {
             return rtm.sendMessage('There was an error fetching the map for this channel', message.channel);
           }
-          web.chat.postMessage(message.channel, 'The current map is: <' + METAMAPS_URL + '/maps/' + id + '|'+ map.name +'> (ID = ' + id + ')');
+          web.chat.postMessage(message.channel, 'The current map is ' + linkWithMapName(id, map.name) + ' (ID: ' + id + ')');
         });
       }
     },
@@ -225,12 +229,13 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
         return true;
       },
       run: function (message) {
-        Metamaps.createMap(message.text.substring(11), tokens[message.user], function (err, mapId) {
+        const mapName = message.text.substring(11)
+        Metamaps.createMap(mapName, tokens[message.user], function (err, mapId) {
           if (err) {
             return rtm.sendMessage('there was an error creating the map', message.channel);
           }
           mapsForChannel[message.channel] = mapId;
-          web.chat.postMessage(message.channel, 'Here is your new map: <' + METAMAPS_URL + '/maps/' + mapId + '|'+ message.text.substring(11) +'> (ID = ' + mapId + ')');
+          web.chat.postMessage(message.channel, 'Channel is set to new map: ' + linkWithMapName(mapId, mapName) + ' (ID: ' + mapId + ')');
         });
       }
     },
