@@ -169,11 +169,16 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
         return true;
       },
       run: function (message) {
-        if (mapsForChannel[message.channel]) {
-          rtm.sendMessage('You\'re on map ' + mapsForChannel[message.channel] + ' for this channel', message.channel);
-        } else {
-          rtm.sendMessage('There is no map set for this channel', message.channel);
+        var id = mapsForChannel[message.channel];
+        if (!id) {
+          return rtm.sendMessage('There is no map set for this channel', message.channel);
         }
+        Metamaps.getMap(id, tokens[message.user], function (err, map) {
+          if (err) {
+            return rtm.sendMessage('There was an error fetching the map for this channel', message.channel);
+          }
+          web.chat.postMessage(message.channel, 'The current map is: <' + METAMAPS_URL + '/maps/' + id + '|'+ map.name +'> (ID = ' + id + ')');
+        });
       }
     },
     {
