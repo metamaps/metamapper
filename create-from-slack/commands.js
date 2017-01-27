@@ -170,7 +170,7 @@ module.exports = function (web, rtm, tokens, users, persistToken, botId, METAMAP
       },
       run: function (message) {
         if (mapsForChannel[message.channel]) {
-          rtm.sendMessage('You\'re on map ' + mapsForChannel[message.channel] + ' for this channel', message.channel);   
+          rtm.sendMessage('You\'re on map ' + mapsForChannel[message.channel] + ' for this channel', message.channel);
         } else {
           rtm.sendMessage('There is no map set for this channel', message.channel);
         }
@@ -361,5 +361,52 @@ module.exports = function (web, rtm, tokens, users, persistToken, botId, METAMAP
     }
   ];
 
-  return COMMANDS;
+  /*
+  https://api.slack.com/events/reaction_added
+  {
+      "type": "reaction_added",
+      "user": "U024BE7LH",
+      "reaction": "thumbsup",
+      "item_user": "U0G9QF9C6",
+      "item": {
+        "type": "message",
+        "channel": "C0G9QF9GZ",
+        "ts": "1360782400.498405"
+      },
+      "event_ts": "1360782804.083113"
+  }
+  */
+  const REACTIONS = reaction => {
+    if (reaction.item.type !== 'message'
+        || reaction.reaction !== 'metamap') return;
+
+    // process the reaction
+    var firstChar = reaction.item.channel.substring(0, 1);
+    var endpoint
+    var channel = rtm.dataStore.getChannelGroupOrDMById(reaction.item.channel)
+
+    if (firstChar === 'C') {
+      endpoint = web.channels
+    } else if (firstChar === 'G') {
+      endpoint = channel._modelName === 'MPDM' ? web.mpdm : web.groups
+    } else if (firstChar === 'D') {
+      endpoint = web.dm
+    }
+    endpoint.history(reaction.item.channel, {
+      latest: reaction.item.ts,
+      inclusive: true,
+      count: 1
+    }).then(resp => {
+      if (!resp.ok) return
+      const message = resp.messages[0]
+      postTopicsToMetamaps([
+        { metacode_id: metacodesForChannel[message.channel], name: message.text }
+      ], message.user, message.channel, message.ts)
+    })
+  }
+
+  return {
+    COMMANDS,
+    REACTIONS
+  };
 };
