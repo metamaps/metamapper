@@ -1,4 +1,4 @@
-module.exports = function (web, rtm, tokens, users, persistToken, botId, METAMAPS_URL, signInUrl, dmForUserId, userName, projectMapId, setProjectMap, teamName) {
+module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken, botId, METAMAPS_URL, signInUrl, dmForUserId, userName, projectMapId, setProjectMap, teamName) {
   var Metamaps = require('./metamaps.js')(METAMAPS_URL)
   var projects = require('./projects.js')(METAMAPS_URL)
   var metacodes = Metamaps.metacodes
@@ -386,11 +386,11 @@ module.exports = function (web, rtm, tokens, users, persistToken, botId, METAMAP
     var channel = rtm.dataStore.getChannelGroupOrDMById(reaction.item.channel)
 
     if (firstChar === 'C') {
-      endpoint = web.channels
+      endpoint = teamWebClient.channels
     } else if (firstChar === 'G') {
-      endpoint = channel._modelName === 'MPDM' ? web.mpdm : web.groups
+      endpoint = channel._modelName === 'MPDM' ? teamWebClient.mpdm : teamWebclient.groups
     } else if (firstChar === 'D') {
-      endpoint = web.dm
+      endpoint = teamWebClient.dm
     }
     endpoint.history(reaction.item.channel, {
       latest: reaction.item.ts,

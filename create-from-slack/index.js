@@ -8,11 +8,12 @@ module.exports = function (team, projectMapId, setProjectMap, dbTokens, authUrl,
   var dataStore = new DataStore();
   var tokens = dbTokens;
   var users = {};
-  var token = team.bot_access_token;
+  var botToken = team.bot_access_token;
   var botId = team.bot_user_id;
 
-  var web = new WebClient(token, {logLevel: 'info', dataStore: dataStore});
-  var rtm = new RtmClient(token, {logLevel: 'info', dataStore: dataStore});
+  var web = new WebClient(team.access_token); // the "App" has different (greater) permissions than the bot
+  var webBot = new WebClient(botToken, {logLevel: 'info', dataStore: dataStore});
+  var rtm = new RtmClient(botToken, {logLevel: 'info', dataStore: dataStore});
   rtm.start();
 
   function dmForUserId(userId) {
@@ -25,7 +26,7 @@ module.exports = function (team, projectMapId, setProjectMap, dbTokens, authUrl,
     return user ? user.name : null
   }
 
-  var SLACK = require('./commands.js')(web, rtm, tokens, users, persistToken, botId, METAMAPS_URL, authUrl, dmForUserId, userName, projectMapId, setProjectMap, team.name);
+  var SLACK = require('./commands.js')(web, webBot, rtm, tokens, users, persistToken, botId, METAMAPS_URL, authUrl, dmForUserId, userName, projectMapId, setProjectMap, team.name);
 
   function verified(message) {
     if (!tokens[message.user]) {
