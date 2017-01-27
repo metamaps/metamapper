@@ -13,7 +13,7 @@ var noApiRootUrl,
 
 function incrementX(mapId) {
   if (typeof coordForMap[mapId] !== 'undefined') {
-    coordForMap[mapId] = coordForMap[mapId] + 100;
+    coordForMap[mapId] = coordForMap[mapId] + 300;
   } else {
       coordForMap[mapId] = 0;
   }
