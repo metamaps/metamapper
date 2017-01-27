@@ -400,8 +400,8 @@ module.exports = function (web, rtm, tokens, users, persistToken, botId, METAMAP
       if (!resp.ok) return
       const message = resp.messages[0]
       postTopicsToMetamaps([
-        { metacode_id: metacodesForChannel[message.channel], name: message.text }
-      ], message.user, message.channel, message.ts)
+        { metacode_id: metacodesForChannel[reaction.item.channel], name: message.text }
+      ], message.user, reaction.item.channel, message.ts)
     })
   }
 
