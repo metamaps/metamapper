@@ -177,7 +177,6 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
         if (!id) {
           return rtm.sendMessage('There is no map set for this channel', message.channel);
         }
-        web.reactions.add('thumbsup', {channel: channel, timestamp: timestamp})
         Metamaps.getMap(id, tokens[message.user], function (err, map) {
           if (err) {
             return rtm.sendMessage('There was an error fetching the map for this channel', message.channel);
