@@ -10,14 +10,30 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
 
   function postTopicsToMetamaps(topics, userId, channel, timestamp) {
     var addToMap = mapsForChannel[channel]
-    topics.forEach(function (topic) {
+    topics.forEach(topic => {
+      // first: use the metacode_id provided if there is one
+      const metacodeInText = Metamaps.findMetacodeEmojiInText(topic.name)
+      if (!topic.metacode_id && metacodeInText) {
+        // second: use a metacode that was used in the text of the message
+        topic.metacode_id = Metamaps.findMetacodeId(metacodeInText)
+        topic.name.replace(Metamaps.emojiRegex, '')
+      }
+      if (!topic.metacode_id) {
+        // third: use the default metacode for the channel
+        // fourth: use 'wildcard' as a last resort
+        topic.metacode_id = metacodesForChannel[message.channel]
+                              || Metamaps.findMetacodeId('Wildcard')
+      }
+
+      const emoji = Metamaps.findMetacodeEmoji(topic.metacode_id)
       Metamaps.addTopicToMap(addToMap, topic, tokens[userId], function (err, topicId, mappingId) {
         if (err == 'topic failed') {
           rtm.sendMessage('failed to create your topic', channel)
         } else if (err == 'mapping failed') {
           rtm.sendMessage('successfully created topic (id: ' + topicId + '), but failed to add it to map ' + addToMap, channel)
         } else {
-          web.reactions.add('thumbsup', {channel: channel, timestamp: timestamp})
+          web.reactions.add(emoji, {channel: channel, timestamp: timestamp})
+          web.reactions.add('zap', {channel: channel, timestamp: timestamp})
         }
       })
     })
@@ -89,13 +105,8 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
         return captureForChannel[message.channel];
       },
       run: function (message) {
-        if (!metacodesForChannel[message.channel]) {
-          rtm.sendMessage('default metacode is not set. set it by using `set metacode [metacode_name]`', message.channel)
-          return;
-        }
-        var topic_name = message.text;
         postTopicsToMetamaps([
-          { metacode_id: metacodesForChannel[message.channel], name: topic_name.trim() }
+          { name: message.text.trim() }
         ], message.user, message.channel, message.ts);
       }
     },
@@ -251,13 +262,13 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
       },
       run: function (message) {
         var metacode_name = message.text.substring(13);
-        var m = Metamaps.findMetacodeByNameOrId(metacode_name);
+        var m = Metamaps.findMetacodeByNameIdOrEmoji(metacode_name);
         if (!m) {
           rtm.sendMessage(metacode_name + ' isn\'t an enabled metacode', message.channel); // list available metacodes?
           return;
         }
         metacodesForChannel[message.channel] = m[1]; // the ID
-        rtm.sendMessage('Ok, I\'ve switched the default metacode for this channel to *' + metacode_name + '*', message.channel);
+        rtm.sendMessage('Ok, I\'ve switched the default metacode for this channel to :' + m[2] + ' *' + m[0] + '*', message.channel);
       }
     },
     {
@@ -276,7 +287,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
         }
         var topic_name = message.text.substring(4);
         postTopicsToMetamaps([
-          { metacode_id: metacodesForChannel[message.channel], name: topic_name.trim() }
+          { name: topic_name.trim() }
         ], message.user, message.channel, message.ts);
       }
     },
@@ -389,8 +400,10 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
   }
   */
   const REACTIONS = reaction => {
-    if (reaction.item.type !== 'message'
-        || reaction.reaction !== 'metamap') return;
+    if (reaction.item.type !== 'message') return;
+
+    const metacodeReactionId = Metamaps.findMetacodeId(reaction.reaction)
+    if (!metacodeReactionId) return
 
     // process the reaction
     var firstChar = reaction.item.channel.substring(0, 1);
@@ -412,13 +425,12 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
     }).then(resp => {
       if (!resp.ok) return
       const message = resp.messages[0]
-      // TODO: set this up to use any metacode
       // TODO: set this up so it recommends the topic get
       // created in metamaps as the person who made the original message
       // FOR now, create the topic as the person who added the reaction
       // otherwise we kinda violate data policy
       postTopicsToMetamaps([
-        { metacode_id: metacodesForChannel[reaction.item.channel], name: message.text }
+        { metacode_id: metacodeReactionId, name: message.text }
       ], reaction.user, reaction.item.channel, message.ts)
     })
   }

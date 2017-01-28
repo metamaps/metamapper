@@ -23,54 +23,54 @@ function incrementX(mapId) {
 var toExport = {
   metacodes: [
     // first column is metacode name, second column is metacode id
-    ["Location", 21578242],
-    ["Experience", 51848956],
-    ["Question", 92282751],
-    ["Action", 100698720],
-    ["Reference", 112740059],
-    ["Process", 113629430],
-    ["Problem", 125146708],
-    ["Open Issue", 241469500],
-    ["Catalyst", 281110143],
-    ["Group", 298486374],
-    ["Feedback", 339908452],
-    ["Future Dev", 374648174],
-    ["Role", 378666952],
-    ["Need", 434890094],
-    ["Intention", 457008489],
-    ["Insight", 507103779],
-    ["Platform", 510532105],
-    ["Task", 513543911],
-    ["Trajectory", 546325864],
-    ["Knowledge", 587967610],
-    ["Idea", 638205575],
-    ["Resource", 843966974],
-    ["Tool", 854565971],
-    ["Activity", 912136629],
-    ["Person", 980190962],
-    ["Implication", 991788158],
-    ["Closed", 1018350795],
-    ["Opportunity", 1047793131],
-    ["Argument", 1047793132],
-    ["Con", 1047793133],
-    ["Decision", 1047793134],
-    ["Example", 1047793135],
-    ["Aim", 1047793136],
-    ["Good Practice", 1047793137],
-    ["List", 1047793138],
-    ["Story", 1047793139],
-    ["Note", 1047793140],
-    ["Pro", 1047793141],
-    ["Research", 1047793142],
-    ["Wildcard", 1047793143],
-    ["Subject", 1047793144],
-    ["Event", 1047793145],
-    ["Media", 1047793146],
-    ["Metamap", 1047793147],
-    ["Model", 1047793148],
-    ["Perspective", 1047793149],
-    ["Project", 1047793150],
-    ["Status", 1047793151]
+    ["Location",      21578242,   'mm_location'],
+    ["Experience",    51848956,   'mm_experience'],
+    ["Question",      92282751,   'mm_question'],
+    ["Action",        100698720,  'mm_action'],
+    ["Reference",     112740059,  'mm_reference'],
+    ["Process",       113629430,  'mm_process'],
+    ["Problem",       125146708,  'mm_problem'],
+    ["Open Issue",    241469500,  'mm_open_issue'],
+    ["Catalyst",      281110143,  'mm_catalyst'],
+    ["Group",         298486374,  'mm_group'],
+    ["Feedback",      339908452,  'mm_feedback'],
+    ["Future Dev",    374648174,  'mm_future_dev'],
+    ["Role",          378666952,  'mm_role'],
+    ["Need",          434890094,  'mm_need'],
+    ["Intention",     457008489,  'mm_intention'],
+    ["Insight",       507103779,  'mm_insight'],
+    ["Platform",      510532105,  'mm_platform'],
+    ["Task",          513543911,  'mm_task'],
+    ["Trajectory",    546325864,  'mm_trajectory'],
+    ["Knowledge",     587967610,  'mm_knowledge'],
+    ["Idea",          638205575,  'mm_idea'],
+    ["Resource",      843966974,  'mm_resource'],
+    ["Tool",          854565971,  'mm_tool'],
+    ["Activity",      912136629,  'mm_activity'],
+    ["Person",        980190962,  'mm_person'],
+    ["Implication",   991788158,  'mm_implication'],
+    ["Closed",        1018350795, 'mm_closed'],
+    ["Opportunity",   1047793131, 'mm_opportunity'],
+    ["Argument",      1047793132, 'mm_argument'],
+    ["Con",           1047793133, 'mm_con'],
+    ["Decision",      1047793134, 'mm_decision'],
+    ["Example",       1047793135, 'mm_example'],
+    ["Aim",           1047793136, 'mm_aim'],
+    ["Good Practice", 1047793137, 'mm_good_practice'],
+    ["List",          1047793138, 'mm_list'],
+    ["Story",         1047793139, 'mm_story'],
+    ["Note",          1047793140, 'mm_note'],
+    ["Pro",           1047793141, 'mm_pro'],
+    ["Research",      1047793142, 'mm_research'],
+    ["Wildcard",      1047793143, 'mm_wildcard'],
+    ["Subject",       1047793144, 'mm_subject'],
+    ["Event",         1047793145, 'mm_event'],
+    ["Media",         1047793146, 'mm_media'],
+    ["Metamap",       1047793147, 'mm_metamap'],
+    ["Model",         1047793148, 'mm_model'],
+    ["Perspective",   1047793149, 'mm_perspective'],
+    ["Project",       1047793150, 'mm_project'],
+    ["Status",        1047793151, 'mm_status']
 /*
     ["Action", 1],
     ["Activity", 2],
@@ -121,19 +121,32 @@ var toExport = {
     ["Wildcard", 47]
 */
   ],
-  findMetacodeByNameOrId: function (nameOrId) {
-    var m;
+  emojiRegex: /:mm_\w+:/g,
+  findMetacodeEmojiInText: function (text) {
+    const regMatch = toExport.emojiRegex.exec(text)
+    return regMatch && regMatch[0].split(':')[1]
+  },
+  findMetacodeByNameIdOrEmoji: function (nameIdOrEmoji) {
+    let m
+    const type = typeof nameIdOrEmoji === 'number' ? 'id' :
+                   nameIdOrEmoji.slice(0,3) === 'mm_' ? 'emoji' : 'name'
     toExport.metacodes.forEach(function (metacode) {
-      if ((typeof nameOrId === 'string' && metacode[0].toLowerCase() === nameOrId.toLowerCase())
-          || metacode[1] === nameOrId) m = metacode;
-    });
-    return m;
+      if ((type === 'name' && metacode[0].toLowerCase() === nameIdOrEmoji.toLowerCase())
+          || (type === 'emoji' && metacode[2] === nameIdOrEmoji)
+          || (type === 'id' && metacode[1] === nameOrId)) {
+        m = metacode
+      }
+    })
+    return m
   },
-  findMetacodeName: function (id) {
-    return toExport.findMetacodeByNameOrId(id)[0];
+  findMetacodeName: function (idOrEmoji) {
+    return toExport.findMetacodeByNameIdOrEmoji(idOrEmoji)[0];
   },
-  findMetacodeId: function (name) {
-    return toExport.findMetacodeByNameOrId(name)[1];
+  findMetacodeId: function (nameOrEmoji) {
+    return toExport.findMetacodeByNameIdOrEmoji(nameOrEmoji)[1];
+  },
+  findMetacodeEmoji: function (idOrName) {
+    return toExport.findMetacodeByNameIdOrEmoji(idOrName)[2]
   },
   addTopicToMap: function (map, topic, token, callback) {
     topic.desc = topic.desc || ''
@@ -220,6 +233,19 @@ var toExport = {
       });
     });
   },
+  findTopicWithLink: function (link, token, callback) {
+    request.get({
+      url: topicsUrl + '?access_token=' + token + '&q=' + link
+    }, function (err, response, body) {
+      if (err || response.statusCode > 200) {
+        console.log(err || 'statusCode: ' + response.statusCode);
+        console.log('body: ', body);
+        return callback('fetching topic failed');
+      }
+      var body = JSON.parse(body);
+      callback(null, body.data[0]);
+    });
+  },
   deleteMapping: function (id, token, callback) {
     request({
       method: 'DELETE',
@@ -298,20 +324,16 @@ var toExport = {
     });
   },
   formatTopicsForDisplay: function (topics) {
-    var string = '';
-
-    topics.forEach(function (t) {
-      const metacodeName = toExport.findMetacodeName(t.metacode_id)
-      string += `<${noApiRootUrl}/topics/${t.id}|${t.name}>`
-      string += ' ('
-      string += `${metacodeName} :${metacodeName.toLowerCase().replace(' ','')}:`
-      string += ') \n';
-    });
-
-    return string;
+    var string = ''
+    topics.forEach(t => {
+      const metacode = toExport.findMetacodeByNameIdOrEmoji(t.metacode_id)
+      string += `:${metacode[2]}: `
+      string += `<${noApiRootUrl}/topics/${t.id}|${t.name}> (${metacode[0]})\n`
+    })
+    return string
   },
   formatMapsForDisplay: function (maps, pageData) {
-    var mapList = maps.map(function (m) {
+    var mapList = maps.map(m => {
       return `<${noApiRootUrl}/maps/${m.id}|${m.name}> \n`;
     }).join('')
     var { current_page, total_pages } = pageData
@@ -332,6 +354,7 @@ module.exports = function (METAMAPS_URL) {
   mappingDeleteUrl = rootUrl + '/mappings'; // + ID
   mapCreateUrl = rootUrl + '/maps';
   mapsUrl = rootUrl + '/maps';
+  topicsUrl = rootUrl + '/topics';
   mapUrl = rootUrl + '/maps/'; // + ID
   usersUrl = rootUrl + '/users';
   return toExport;
