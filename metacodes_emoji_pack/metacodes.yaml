@@ -1,0 +1,98 @@
+title: metacodes
+emojis:
+  - name: mm_action
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_action.png
+  - name: mm_activity
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_activity.png
+  - name: mm_catalyst
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_catalyst.png
+  - name: mm_closed
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_closedissue.png
+  - name: mm_process
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_process.png
+  - name: mm_future_dev
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_futuredev.png
+  - name: mm_group
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_group.png
+  - name: mm_implication
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_implication.png
+  - name: mm_insight
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_insight.png
+  - name: mm_intention
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_intention.png
+  - name: mm_knowledge
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_knowledge.png
+  - name: mm_location
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_location.png
+  - name: mm_need
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_need.png
+  - name: mm_open_issue
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_openissue.png
+  - name: mm_opportunity
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_opportunity.png
+  - name: mm_person
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_person.png
+  - name: mm_platform
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_platform.png
+  - name: mm_problem
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_problem.png
+  - name: mm_resource
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_resource.png
+  - name: mm_role
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_role.png
+  - name: mm_task
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_task.png
+  - name: mm_trajectory
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/blueprint/96px/bp_trajectory.png
+  - name: mm_argument
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_argument.png
+  - name: mm_con
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_con.png
+  - name: mm_subject
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_subject.png
+  - name: mm_decision
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_decision.png
+  - name: mm_event
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_event.png
+  - name: mm_example
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_example.png
+  - name: mm_experience
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_experience.png
+  - name: mm_feedback
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_feedback.png
+  - name: mm_aim
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_aim.png
+  - name: mm_good_practice
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_goodpractice.png
+  - name: mm_idea
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_idea.png
+  - name: mm_list
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_list.png
+  - name: mm_media
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_media.png
+  - name: mm_metamap
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_metamap.png
+  - name: mm_model
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_model.png
+  - name: mm_note
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_note.png
+  - name: mm_perspective
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_perspective.png
+  - name: mm_pro
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_pro.png
+  - name: mm_project
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_project.png
+  - name: mm_question
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_question.png
+  - name: mm_reference
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_reference.png
+  - name: mm_research
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_research.png
+  - name: mm_status
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_status.png
+  - name: mm_story
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_story.png
+  - name: mm_tool
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_tool.png
+  - name: mm_wildcard
+    src: https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_wildcard.png
