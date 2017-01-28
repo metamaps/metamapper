@@ -201,7 +201,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
           if (err) {
             return rtm.sendMessage('there was an error retrieving the map', message.channel);
           }
-          web.chat.postMessage(message.channel, linkWithMapName(id, map.name) + '\n' + Metamaps.formatTopicsForDisplay(map.topics));
+          web.chat.postMessage(message.channel, 'map name: ' + linkWithMapName(id, map.name) + '\n' + Metamaps.formatTopicsForDisplay(map.topics));
         });
       }
     },
