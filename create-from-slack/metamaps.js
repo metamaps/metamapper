@@ -140,13 +140,16 @@ var toExport = {
     return m
   },
   findMetacodeName: function (idOrEmoji) {
-    return toExport.findMetacodeByNameIdOrEmoji(idOrEmoji)[0];
+    const metacode = toExport.findMetacodeByNameIdOrEmoji(idOrEmoji)
+    return metacode && metacode[0]
   },
   findMetacodeId: function (nameOrEmoji) {
-    return toExport.findMetacodeByNameIdOrEmoji(nameOrEmoji)[1];
+    const metacode = toExport.findMetacodeByNameIdOrEmoji(nameOrEmoji)
+    return metacode && metacode[1]
   },
   findMetacodeEmoji: function (idOrName) {
-    return toExport.findMetacodeByNameIdOrEmoji(idOrName)[2]
+    const metacode = toExport.findMetacodeByNameIdOrEmoji(idOrName)
+    return metacode && metacode[2]
   },
   addTopicToMap: function (map, topic, token, callback) {
     topic.desc = topic.desc || ''
