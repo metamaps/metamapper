@@ -133,7 +133,7 @@ var toExport = {
     toExport.metacodes.forEach(function (metacode) {
       if ((type === 'name' && metacode[0].toLowerCase() === nameIdOrEmoji.toLowerCase())
           || (type === 'emoji' && metacode[2] === nameIdOrEmoji)
-          || (type === 'id' && metacode[1] === nameOrId)) {
+          || (type === 'id' && metacode[1] === nameIdOrEmoji)) {
         m = metacode
       }
     })
