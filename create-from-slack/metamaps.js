@@ -337,7 +337,7 @@ var toExport = {
   },
   formatMapsForDisplay: function (maps, pageData) {
     var mapList = maps.map(m => {
-      return `<${noApiRootUrl}/maps/${m.id}|${m.name}> \n`;
+      return `<${noApiRootUrl}/maps/${m.id}|${m.name}> (${m.id})\n`;
     }).join('')
     var { current_page, total_pages } = pageData
     if (current_page < total_pages) {

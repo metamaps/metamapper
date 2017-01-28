@@ -268,23 +268,19 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
           return;
         }
         metacodesForChannel[message.channel] = m[1]; // the ID
-        rtm.sendMessage('Ok, I\'ve switched the default metacode for this channel to :' + m[2] + ' *' + m[0] + '*', message.channel);
+        rtm.sendMessage('Ok, I\'ve switched the default metacode for this channel to :' + m[2] + ': *' + m[0] + '*', message.channel);
       }
     },
     {
       cmd: "mm: ",
       variable: "[TOPIC_NAME]",
       inHelpList: true,
-      helpText: "use default metacode for the channel to create a topic",
+      helpText: "use an inline metacode emoji or the default metacode for the channel or Wildcard to create a topic",
       requireUser: true,
       check: function (message) {
         return true;
       },
       run: function (message) {
-        if (!metacodesForChannel[message.channel]) {
-          rtm.sendMessage('default metacode is not set. set it by using `set metacode [metacode_name]`', message.channel)
-          return;
-        }
         var topic_name = message.text.substring(4);
         postTopicsToMetamaps([
           { name: topic_name.trim() }
@@ -400,7 +396,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
   }
   */
   const REACTIONS = reaction => {
-    if (reaction.item.type !== 'message') return;
+    if (reaction.item.type !== 'message' || reaction.user === botId) return;
 
     const metacodeReactionId = Metamaps.findMetacodeId(reaction.reaction)
     if (!metacodeReactionId) return
