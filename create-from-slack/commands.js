@@ -21,7 +21,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
       if (!topic.metacode_id) {
         // third: use the default metacode for the channel
         // fourth: use 'wildcard' as a last resort
-        topic.metacode_id = metacodesForChannel[message.channel]
+        topic.metacode_id = metacodesForChannel[channel]
                               || Metamaps.findMetacodeId('Wildcard')
       }
 
