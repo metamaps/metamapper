@@ -301,14 +301,18 @@ var toExport = {
     var string = '';
 
     topics.forEach(function (t) {
-      string += t.name + ' (' + toExport.findMetacodeName(t.metacode_id) + ') \n';
+      const metacodeName = toExport.findMetacodeName(t.metacode_id)
+      string += `<${noApiRootUrl}/topics/${t.id}|${t.name}>`
+      string += ' ('
+      string += `${metacodeName} :${metacodeName.toLowerCase().replace(' ','')}:`
+      string += ') \n';
     });
 
     return string;
   },
   formatMapsForDisplay: function (maps, pageData) {
     var mapList = maps.map(function (m) {
-      return `- ${m.name}: ${noApiRootUrl}/maps/${m.id} \n`;
+      return `<${noApiRootUrl}/maps/${m.id}|${m.name}> \n`;
     }).join('')
     var { current_page, total_pages } = pageData
     if (current_page < total_pages) {

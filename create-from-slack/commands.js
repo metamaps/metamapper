@@ -118,7 +118,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
       }
     },
     {
-      cmd: "my maps ",
+      cmd: "my maps",
       variable: "[PAGE]",
       inHelpList: true,
       helpText: "see a list of your maps",
@@ -134,7 +134,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
             if (err) {
               return rtm.sendMessage('there was an error retrieving your maps', message.channel);
             }
-            rtm.sendMessage(Metamaps.formatMapsForDisplay(maps, pageData) + '\n', message.channel);
+            web.chat.postMessage(message.channel, Metamaps.formatMapsForDisplay(maps, pageData) + '\n');
           });
         }
 
@@ -186,7 +186,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
       }
     },
     {
-      cmd: "show map ",
+      cmd: "show map",
       variable: "[MAP_ID]",
       inHelpList: true,
       helpText: "return all the topics for a given map id in a list",
@@ -195,17 +195,18 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
         return true;
       },
       run: function (message) {
-        var id = message.text.substring(9);
+        var id = message.text.length > 8 ?
+                   message.text.substring(9) : mapsForChannel[message.channel];
         Metamaps.getMap(id, tokens[message.user], function (err, map) {
           if (err) {
             return rtm.sendMessage('there was an error retrieving the map', message.channel);
           }
-          rtm.sendMessage(Metamaps.formatTopicsForDisplay(map.topics) + '\n' + METAMAPS_URL + '/maps/' + id, message.channel);
+          web.chat.postMessage(message.channel, linkWithMapName(id, map.name) + '\n' + Metamaps.formatTopicsForDisplay(map.topics));
         });
       }
     },
     {
-      cmd: "open map ",
+      cmd: "open map",
       variable: "[MAP_ID]",
       inHelpList: true,
       helpText: "return a link to open the map",
@@ -214,7 +215,8 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
         return true;
       },
       run: function (message) {
-        var id = message.text.substring(9);
+        var id = message.text.length > 8 ?
+                   message.text.substring(9) : mapsForChannel[message.channel];
         rtm.sendMessage(METAMAPS_URL + '/maps/' + id, message.channel);
       }
     },
