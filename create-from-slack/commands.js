@@ -16,7 +16,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
       if (!topic.metacode_id && metacodeInText) {
         // second: use a metacode that was used in the text of the message
         topic.metacode_id = Metamaps.findMetacodeId(metacodeInText)
-        topic.name.replace(Metamaps.emojiRegex, '')
+        topic.name = topic.name.replace(Metamaps.emojiRegex, '')
       }
       if (!topic.metacode_id) {
         // third: use the default metacode for the channel
