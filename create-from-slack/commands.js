@@ -33,7 +33,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
           rtm.sendMessage('successfully created topic (id: ' + topicId + '), but failed to add it to map ' + addToMap, channel)
         } else {
           web.reactions.add(emoji, {channel: channel, timestamp: timestamp})
-          web.reactions.add('zap', {channel: channel, timestamp: timestamp})
+            .then(() => web.reactions.add('zap', {channel: channel, timestamp: timestamp}))
         }
       })
     })
