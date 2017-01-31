@@ -23,8 +23,21 @@ module.exports = function (
   var metacodes = Metamaps.metacodes
 
   const getArchiveLink = (channelId, messageId) => {
-    return 'asdflkjasfasdlkfjasd.com'
-    //return `https://metamaps.slack.com/archives/${channelName}/p${timestampWithoutDot}`
+    const teamDomain = rtm.dataStore.teams[rtm.activeTeamId].domain
+    const channelIsh = rtm.dataStore.getChannelGroupOrDMById(message.channel)
+    let channelName
+    if (channelIsh._modelName === 'Channel') {
+      channelName = channelIsh.name
+    } else if (channelIsh._modelName === 'Group' && !channelIsh.is_mpim) {
+      // private channel
+      channelName = channelIsh.name
+    } else if (channelIsh._modelName === 'Group') {
+      channelName = channelIsh.id
+    } else if (channelIsh._modelName === 'DM') {
+      channelName = channelIsh.id
+    }
+    const timestampWithoutDot = messageId.replace('.','')
+    return `https://${teamDomain}.slack.com/archives/${channelName}/p${timestampWithoutDot}`
   }
 
   // this is for responses
@@ -107,7 +120,7 @@ module.exports = function (
       }
 
       // add link back to the message to the topic getting created
-      //topic.link = getArchiveLink(channel, timestamp)
+      topic.link = getArchiveLink(channel, timestamp)
       topic.defer_to_map_id = addToMap
 
       const emoji = Metamaps.findMetacodeEmoji(topic.metacode_id)
