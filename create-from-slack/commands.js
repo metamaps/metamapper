@@ -1,3 +1,5 @@
+const Promise = require('bluebird')
+
 module.exports = function (
   teamWebClient,
   web,
@@ -19,6 +21,52 @@ module.exports = function (
   var Metamaps = require('./metamaps.js')(METAMAPS_URL)
   var projects = require('./projects.js')(METAMAPS_URL)
   var metacodes = Metamaps.metacodes
+
+  console.log(rtm)
+
+  const getArchiveLink = (channelId, messageId) => {
+    return 'asdflkjasfasdlkfjasd.com'
+    //return `https://metamaps.slack.com/archives/${channelName}/p${timestampWithoutDot}`
+  }
+
+  // this is for responses
+  const topicChannelPerson = {}
+  const messagesTopics = {}
+  const fetchTopicForMessage = (channelId, messageId, personId) => {
+    // check the cache first
+    if (messagesTopics[channelId + messageId]) {
+      setTopicChannelPerson(channelId, personId, messagesTopics[channelId + messageId])
+      return
+    }
+    const archiveLink = getArchiveLink(channelId, messageId)
+    Metamaps.findTopicWithLink(archiveLink, tokens[personId], (err, topic) => {
+      if (err || !topic) {
+        if (err) console.log(err)
+        setMessageChannelPerson(channelId, personId, null)
+        web.reactions.add('exclamation', {channel: channelId, timestamp: messageId})
+        return
+      }
+      messagesTopics[channelId + messageId] = topic.id // add it to the cache
+      if (getTopicChannelPerson(channelId, personId).message === messageId) {
+        setTopicChannelPerson(channelId, personId, topic.id)
+      }
+    })
+  }
+  const getTopicChannelPerson = (channelId, personId) => {
+    topicChannelPerson[channelId] = topicChannelPerson[channelId] || {}
+    topicChannelPerson[channelId][personId] = topicChannelPerson[channelId][personId] || {}
+    return topicChannelPerson[channelId][personId]
+  }
+  const setMessageChannelPerson = (channelId, personId, messageId) => {
+    topicChannelPerson[channelId] = topicChannelPerson[channelId] || {}
+    topicChannelPerson[channelId][personId] = {
+      message: messageId
+    }
+    if (messageId) fetchTopicForMessage(channelId, messageId, personId)
+  }
+  const setTopicChannelPerson = (channelId, personId, topicId) => {
+    topicChannelPerson[channelId][personId].topic = topicId
+  }
 
   const persistChannel = channel => {
     persistChannelSetting(
@@ -60,13 +108,39 @@ module.exports = function (
                               || Metamaps.findMetacodeId('Wildcard')
       }
 
+      // add link back to the message to the topic getting created
+      //topic.link = getArchiveLink(channel, timestamp)
+      topic.defer_to_map_id = addToMap
+
       const emoji = Metamaps.findMetacodeEmoji(topic.metacode_id)
       Metamaps.addTopicToMap(addToMap, topic, tokens[userId], function (err, topicId, mappingId) {
+        let createSynapse
         if (err == 'topic failed') {
           rtm.sendMessage('failed to create your topic', channel)
         } else if (err == 'mapping failed') {
           rtm.sendMessage('successfully created topic (id: ' + topicId + '), but failed to add it to map ' + addToMap, channel)
         } else {
+          createSynapse = () => {
+            const synapseInfo = getTopicChannelPerson(channel, userId)
+            let synapse
+            if (!synapseInfo.message) return
+            if (synapseInfo.topic) {
+              synapse = {
+                topic1_id: synapseInfo.topic,
+                topic2_id: topicId,
+                category: 'from-to',
+                defer_to_map_id: addToMap
+              }
+              Metamaps.addSynapseToMap(addToMap, synapse, tokens[userId], (err, synapseId, mappingId) => {
+                if (err) {
+                  console.log(err)
+                  web.reactions.add('exclamation', {channel: channel, timestamp: timestamp})
+                }
+              })
+            }
+            else setTimeout(() => createSynapse(), 50) // must be waiting for fetchTopicForMessage to succeed or error
+          }
+          createSynapse()
           web.reactions.add(emoji, {channel: channel, timestamp: timestamp})
             .then(() => web.reactions.add('zap', {channel: channel, timestamp: timestamp}))
         }
@@ -430,12 +504,7 @@ module.exports = function (
       "event_ts": "1360782804.083113"
   }
   */
-  const REACTIONS = reaction => {
-    if (reaction.item.type !== 'message' || reaction.user === botId) return;
-
-    const metacodeReactionId = Metamaps.findMetacodeId(reaction.reaction)
-    if (!metacodeReactionId) return
-
+  const commonForReactions = reaction => {
     // process the reaction
     var firstChar = reaction.item.channel.substring(0, 1);
     var endpoint
@@ -448,20 +517,43 @@ module.exports = function (
     } else if (firstChar === 'D') {
       endpoint = teamWebClient.dm
     }
-    endpoint.history(reaction.item.channel, {
+    return endpoint.history(reaction.item.channel, {
       latest: reaction.item.ts,
       inclusive: true,
       count: 1
     }).then(resp => {
-      if (!resp.ok) return
+      if (!resp.ok) return Promise.reject()
       const message = resp.messages[0]
-      // TODO: set this up so it recommends the topic get
-      // created in metamaps as the person who made the original message
-      // FOR now, create the topic as the person who added the reaction
-      // otherwise we kinda violate data policy
-      postTopicsToMetamaps([
-        { metacode_id: metacodeReactionId, name: message.text }
-      ], reaction.user, reaction.item.channel, message.ts)
+      return Promise.resolve(message)
+    })
+  }
+  const differentReactions = [
+    {
+      check: reaction => Metamaps.findMetacodeId(reaction.reaction),
+      run: reaction => {
+        commonForReactions(reaction)
+        .then(message => {
+          postTopicsToMetamaps([
+            { metacode_id: Metamaps.findMetacodeId(reaction.reaction), name: message.text }
+          ], reaction.user, reaction.item.channel, message.ts)
+        })
+      }
+    },
+    {
+      check: reaction => reaction.reaction === 'zap',
+      run: reaction => {
+        if (getTopicChannelPerson(reaction.item.channel, reaction.user).message === reaction.item.ts) {
+          // was already set to this message, now remove it
+          setMessageChannelPerson(reaction.item.channel, reaction.user, null)
+        }
+        else setMessageChannelPerson(reaction.item.channel, reaction.user, reaction.item.ts)
+      }
+    }
+  ]
+  const REACTIONS = reaction => {
+    if (reaction.item.type !== 'message' || reaction.user === botId) return;
+    differentReactions.forEach(r => {
+      r.check(reaction) && r.run(reaction)
     })
   }
 
