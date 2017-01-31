@@ -34,6 +34,13 @@ var Token = mongoose.model('Token', {
   user_id: String,
   team_id: String
 });
+var ChannelSetting = mongoose.model('ChannelSetting', {
+  metacode_id: String,
+  map_id: String,
+  capture: Boolean, // whether to capture every message or not
+  channel_id: String,
+  team_id: String
+});
 
 // Initialize
 Team.find(function (err, teams) {
@@ -47,14 +54,20 @@ Team.find(function (err, teams) {
         console.log(err);
         return;
       }
-      var userTokens = {};
-      tokens.forEach(function (t) { if (t.get('access_token'))  userTokens[t.get('user_id')] = t.get('access_token') });
-      startBotForTeam(team, userTokens);
+      ChannelSetting.find({ team_id: team.get('team_id') }, function (err, channelSettings) {
+        if (err) {
+          console.log(err);
+          return;
+        }
+        var userTokens = {};
+        tokens.forEach(function (t) { if (t.get('access_token'))  userTokens[t.get('user_id')] = t.get('access_token') });
+        startBotForTeam(team, userTokens, channelSettings);
+      });
     });
   });
 });
 
-function startBotForTeam(team, tokens) {
+function startBotForTeam(team, tokens, channelSettings) {
   var toPassIn = {
     name: team.get('team_name'),
     access_token: team.get('access_token'),
@@ -76,7 +89,29 @@ function startBotForTeam(team, tokens) {
     team.save()
   };
 
-  bots[team.get('team_id')] = metamapBot(toPassIn, team.get('project_map_id'), persistProjectMap, tokens || {}, authUrl, METAMAPS_URL, persistToken); // returns the addTokenForUser function
+  toPassIn.channelSettings = {}
+  channelSettings.forEach(function (cS) {
+    toPassIn.channelSettings[cS.get('channel_id')] = {
+      map: cS.get('map_id'),
+      metacode: cS.get('metacode_id'),
+      capture: cS.capture
+    }
+  })
+  var persistChannelSetting = function (channelId, mapId, metacodeId, capture) {
+    var channelSetting = channelSettings.find(cS => cS.get('channel_id') === channelId)
+    if (!channelSetting) {
+      channelSetting = new ChannelSetting({
+        channel_id: channelId,
+        team_id: team.get('team_id')
+      })
+    }
+    channelSetting.capture = capture
+    channelSetting.map_id = mapId
+    channelSetting.metacode_id = metacodeId
+    channelSetting.save()
+  }
+
+  bots[team.get('team_id')] = metamapBot(toPassIn, team.get('project_map_id'), persistProjectMap, tokens || {}, authUrl, METAMAPS_URL, persistToken, persistChannelSetting); // returns the addTokenForUser function
 }
 
 app.get('/', function (req, res) {

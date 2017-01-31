@@ -1,4 +1,4 @@
-module.exports = function (team, projectMapId, setProjectMap, dbTokens, authUrl, METAMAPS_URL, persistToken) {
+module.exports = function (team, projectMapId, setProjectMap, dbTokens, authUrl, METAMAPS_URL, persistToken, persistChannelSetting) {
 
   var CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
   var RtmClient = require('@slack/client').RtmClient;
@@ -26,7 +26,23 @@ module.exports = function (team, projectMapId, setProjectMap, dbTokens, authUrl,
     return user ? user.name : null
   }
 
-  var SLACK = require('./commands.js')(web, webBot, rtm, tokens, users, persistToken, botId, METAMAPS_URL, authUrl, dmForUserId, userName, projectMapId, setProjectMap, team.name);
+  var SLACK = require('./commands.js')(
+    web,
+    webBot,
+    rtm,
+    tokens,
+    users,
+    persistToken,
+    botId,
+    METAMAPS_URL,
+    authUrl,
+    dmForUserId,
+    userName,
+    projectMapId,
+    setProjectMap,
+    team.channelSettings,
+    persistChannelSetting,
+    team.name);
 
   function verified(message) {
     if (!tokens[message.user]) {
@@ -51,8 +67,6 @@ module.exports = function (team, projectMapId, setProjectMap, dbTokens, authUrl,
       }
     });
   });
-
-
 
   rtm.on(RTM_EVENTS.REACTION_ADDED, SLACK.REACTIONS);
 

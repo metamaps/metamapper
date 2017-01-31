@@ -1,15 +1,50 @@
-module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken, botId, METAMAPS_URL, signInUrl, dmForUserId, userName, projectMapId, setProjectMap, teamName) {
+module.exports = function (
+  teamWebClient,
+  web,
+  rtm,
+  tokens,
+  users,
+  persistToken,
+  botId,
+  METAMAPS_URL,
+  signInUrl,
+  dmForUserId,
+  userName,
+  projectMapId,
+  setProjectMap,
+  channelSettings,
+  persistChannelSetting,
+  teamName) {
+
   var Metamaps = require('./metamaps.js')(METAMAPS_URL)
   var projects = require('./projects.js')(METAMAPS_URL)
   var metacodes = Metamaps.metacodes
-  var mapsForChannel = {}
-  var metacodesForChannel = {}
-  var captureForChannel = {}
+
+  const persistChannel = channel => {
+    persistChannelSetting(
+      channel,
+      channelSettings[channel].map,
+      channelSettings[channel].metacode,
+      channelSettings[channel].capture
+    )
+  }
+  const setChannelSetting = (channel, property, value) => {
+    channelSettings[channel] = channelSettings[channel] || {}
+    channelSettings[channel][property] = value
+    persistChannel(channel)
+  }
+  const getChannelSetting = (channel, property) => {
+    channelSettings[channel] = channelSettings[channel] || {}
+    return channelSettings[channel][property]
+  }
 
   if (projectMapId) projects.setProjectMapId(projectMapId)
 
   function postTopicsToMetamaps(topics, userId, channel, timestamp) {
-    var addToMap = mapsForChannel[channel]
+    var addToMap = getChannelSetting(channel, 'map') // returns the id
+    if (!addToMap) {
+      rtm.sendMessage('There\'s no map set for this channel, use *set map*', channel)
+    }
     topics.forEach(topic => {
       // first: use the metacode_id provided if there is one
       const metacodeInText = Metamaps.findMetacodeEmojiInText(topic.name)
@@ -21,7 +56,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
       if (!topic.metacode_id) {
         // third: use the default metacode for the channel
         // fourth: use 'wildcard' as a last resort
-        topic.metacode_id = metacodesForChannel[channel]
+        topic.metacode_id = getChannelSetting(channel, 'metacode')
                               || Metamaps.findMetacodeId('Wildcard')
       }
 
@@ -70,12 +105,12 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
         return true;
       },
       run: function (message) {
-        if (!mapsForChannel[message.channel]) {
+        if (!getChannelSetting(message.channel, 'map')) {
           rtm.sendMessage('You need to set a map for this channel first. Use \'set map\' or \'create map\'', message.channel);
           return
         }
-        captureForChannel[message.channel] = true;
-        rtm.sendMessage('Ok, I will capture every message to map ' + mapsForChannel[message.channel] + ' until you type \'stop capture\'', message.channel);
+        setChannelSetting(message.channel, 'capture', true)
+        rtm.sendMessage('Ok, I will capture every message to map ' + getChannelSetting(message.channel, 'map') + ' until you type \'stop capture\'', message.channel);
       }
     },
     {
@@ -88,11 +123,11 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
         return true;
       },
       run: function (message) {
-        if (!captureForChannel[message.channel]) {
+        if (!getChannelSetting(message.channel, 'capture')) {
           rtm.sendMessage('You weren\'t capturing anywho!', message.channel);
           return
         }
-        captureForChannel[message.channel] = false;
+        setChannelSetting(message.channel, 'capture', false)
         rtm.sendMessage('Ok, I\'ve stopped capturing every message to the map', message.channel);
       }
     },
@@ -102,7 +137,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
       inHelpList: false,
       requireUser: true,
       check: function (message) {
-        return captureForChannel[message.channel];
+        return getChannelSetting(message.channel, 'capture');
       },
       run: function (message) {
         postTopicsToMetamaps([
@@ -170,8 +205,8 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
         return true;
       },
       run: function (message) {
-        mapsForChannel[message.channel] = message.text.substring(8);
-        rtm.sendMessage('Ok, I\'ve switched to map ' + mapsForChannel[message.channel] + ' for this channel', message.channel);
+        setChannelSetting(message.channel, 'map', message.text.substring(8));
+        rtm.sendMessage('Ok, I\'ve switched to map ' + getChannelSetting(message.channel, 'map') + ' for this channel', message.channel);
       }
     },
     {
@@ -184,7 +219,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
         return true;
       },
       run: function (message) {
-        var id = mapsForChannel[message.channel];
+        var id = getChannelSetting(message.channel, 'map');
         if (!id) {
           return rtm.sendMessage('There is no map set for this channel', message.channel);
         }
@@ -207,7 +242,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
       },
       run: function (message) {
         var id = message.text.length > 8 ?
-                   message.text.substring(9) : mapsForChannel[message.channel];
+                   message.text.substring(9) : getChannelSetting(message.channel, 'map');
         Metamaps.getMap(id, tokens[message.user], function (err, map) {
           if (err) {
             return rtm.sendMessage('there was an error retrieving the map', message.channel);
@@ -227,7 +262,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
       },
       run: function (message) {
         var id = message.text.length > 8 ?
-                   message.text.substring(9) : mapsForChannel[message.channel];
+                   message.text.substring(9) : getChannelSetting(message.channel, 'map');
         rtm.sendMessage(METAMAPS_URL + '/maps/' + id, message.channel);
       }
     },
@@ -246,7 +281,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
           if (err) {
             return rtm.sendMessage('there was an error creating the map', message.channel);
           }
-          mapsForChannel[message.channel] = mapId;
+          setChannelSetting(message.channel, 'map', mapId);
           web.chat.postMessage(message.channel, 'Channel is set to new map: ' + linkWithMapName(mapId, mapName) + ' (ID: ' + mapId + ')');
         });
       }
@@ -267,7 +302,7 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
           rtm.sendMessage(metacode_name + ' isn\'t an enabled metacode', message.channel); // list available metacodes?
           return;
         }
-        metacodesForChannel[message.channel] = m[1]; // the ID
+        setChannelSetting(message.channel, 'metacode', m[1]); // the ID
         rtm.sendMessage('Ok, I\'ve switched the default metacode for this channel to :' + m[2] + ': *' + m[0] + '*', message.channel);
       }
     },
@@ -409,7 +444,6 @@ module.exports = function (teamWebClient, web, rtm, tokens, users, persistToken,
     if (firstChar === 'C') {
       endpoint = teamWebClient.channels
     } else if (firstChar === 'G') {
-      console.log(channel)
       endpoint = channel._modelName === 'MPDM' ? teamWebClient.mpdm : teamWebClient.groups
     } else if (firstChar === 'D') {
       endpoint = teamWebClient.dm
