@@ -22,8 +22,6 @@ module.exports = function (
   var projects = require('./projects.js')(METAMAPS_URL)
   var metacodes = Metamaps.metacodes
 
-  console.log(rtm)
-
   const getArchiveLink = (channelId, messageId) => {
     return 'asdflkjasfasdlkfjasd.com'
     //return `https://metamaps.slack.com/archives/${channelName}/p${timestampWithoutDot}`
