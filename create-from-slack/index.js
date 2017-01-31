@@ -55,7 +55,7 @@ module.exports = function (team, projectMapId, setProjectMap, dbTokens, authUrl,
 
   rtm.on(RTM_EVENTS.MESSAGE, function (message) {
     if (!message.text) return;
-    console.log(rtm)
+    console.log(rtm.dataStore.teams[rtm.dataStore.activeTeamId])
     var ran;
     SLACK.COMMANDS.forEach(function (command) {
       if (!ran &&
