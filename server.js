@@ -104,6 +104,7 @@ function startBotForTeam(team, tokens, channelSettings) {
         channel_id: channelId,
         team_id: team.get('team_id')
       })
+      channelSettings.push(channelSetting)
     }
     channelSetting.capture = capture
     channelSetting.map_id = mapId
