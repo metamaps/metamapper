@@ -24,7 +24,7 @@ module.exports = function (
 
   const getArchiveLink = (channelId, messageId) => {
     const teamDomain = rtm.dataStore.teams[rtm.activeTeamId].domain
-    const channelIsh = rtm.dataStore.getChannelGroupOrDMById(message.channel)
+    const channelIsh = rtm.dataStore.getChannelGroupOrDMById(channelId)
     let channelName
     if (channelIsh._modelName === 'Channel') {
       channelName = channelIsh.name
