@@ -229,7 +229,7 @@ var toExport = {
         if (err || response.statusCode > 200) {
           console.log(err || 'statusCode: ' + response.statusCode);
           console.log('body: ', body);
-          return callback('mapping failed', topicId);
+          return callback('mapping failed', synapseId);
         }
         var body = JSON.parse(body);
         callback(null, synapseId, body.data.id);
