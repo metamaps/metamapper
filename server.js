@@ -68,6 +68,9 @@ Team.find(function (err, teams) {
 });
 
 function startBotForTeam(team, tokens, channelSettings) {
+  channelSettings = channelSettings || []
+  tokens = tokens || {}
+
   var toPassIn = {
     name: team.get('team_name'),
     access_token: team.get('access_token'),
@@ -112,7 +115,7 @@ function startBotForTeam(team, tokens, channelSettings) {
     channelSetting.save()
   }
 
-  bots[team.get('team_id')] = metamapBot(toPassIn, team.get('project_map_id'), persistProjectMap, tokens || {}, authUrl, METAMAPS_URL, persistToken, persistChannelSetting); // returns the addTokenForUser function
+  bots[team.get('team_id')] = metamapBot(toPassIn, team.get('project_map_id'), persistProjectMap, tokens, authUrl, METAMAPS_URL, persistToken, persistChannelSetting); // returns the addTokenForUser function
 }
 
 app.get('/', function (req, res) {
