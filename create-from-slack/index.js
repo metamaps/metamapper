@@ -59,6 +59,8 @@ module.exports = function (team, projectMapId, setProjectMap, dbTokens, authUrl,
 
     var ran;
     SLACK.COMMANDS.forEach(function (command) {
+      console.log(message.text.slice(0, command.cmd.length).toLowerCase())
+      console.log(command.cmd)
       if (!ran &&
           message.text.slice(0, command.cmd.length).toLowerCase() === command.cmd &&
           command.check(message) &&
