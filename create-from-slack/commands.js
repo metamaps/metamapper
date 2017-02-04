@@ -152,6 +152,7 @@ module.exports = function (
             else setTimeout(() => createSynapse(), 50) // must be waiting for fetchTopicForMessage to succeed or error
           }
           createSynapse()
+          console.log(channel)
           web.reactions.add(emoji, {channel: channel, timestamp: timestamp})
             .then(() => web.reactions.add('zap', {channel: channel, timestamp: timestamp}))
         }
