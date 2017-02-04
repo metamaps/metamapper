@@ -54,15 +54,12 @@ module.exports = function (team, projectMapId, setProjectMap, dbTokens, authUrl,
   }
 
   rtm.on(RTM_EVENTS.MESSAGE, function (message) {
-    console.log(message)
     if (!message.text) return;
 
     var ran;
     SLACK.COMMANDS.forEach(function (command) {
-      console.log(message.text.slice(0, command.cmd.length).toLowerCase())
-      console.log(command.cmd)
       if (!ran &&
-          message.text.slice(0, command.cmd.length).toLowerCase() === command.cmd &&
+          message.text.slice(0, command.cmd.length).toLowerCase() === command.cmd.toLowerCase() &&
           command.check(message) &&
           (!command.requireUser || verified(message))) {
         ran = true;
