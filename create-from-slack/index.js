@@ -64,7 +64,8 @@ module.exports = function (team, projectMapId, setProjectMap, dbTokens, authUrl,
           command.check(message) &&
           (!command.requireUser || verified(message))) {
         ran = true;
-        command.run(message);
+        console.log(command.cmd)
+        command.run(message)
       }
     });
   });
