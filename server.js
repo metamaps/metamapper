@@ -35,7 +35,7 @@ var Token = mongoose.model('Token', {
   team_id: String
 });
 var ChannelSetting = mongoose.model('ChannelSetting', {
-  metacode_id: String,
+  metacode_id: Number,
   map_id: String,
   capture: Boolean, // whether to capture every message or not
   channel_id: String,
