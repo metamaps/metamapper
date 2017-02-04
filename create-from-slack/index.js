@@ -54,6 +54,7 @@ module.exports = function (team, projectMapId, setProjectMap, dbTokens, authUrl,
   }
 
   rtm.on(RTM_EVENTS.MESSAGE, function (message) {
+    console.log(message)
     if (!message.text) return;
 
     var ran;
