@@ -454,7 +454,7 @@ module.exports = function (
       }
     },
     {
-      cmd: "<@" + botId + '> update projects',
+      cmd: "<@" + botId + '> update projects'.toLowerCase(),
       variable: "",
       inHelpList: true,
       helpText: "update who is working on what projects",
@@ -482,7 +482,7 @@ module.exports = function (
       }
     },
     {
-      cmd: "<@" + botId + '> help',
+      cmd: '<@' + botId + '> help'.toLowerCase(),
       variable: "",
       inHelpList: true,
       helpText: "list all the commands that metamapper knows",
