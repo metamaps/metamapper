@@ -148,6 +148,7 @@ module.exports = function (
                   web.reactions.add('exclamation', {channel: channel, timestamp: timestamp})
                 }
               })
+              setMessageChannelPerson(channel, userId, null) // reset
             }
             else setTimeout(() => createSynapse(), 50) // must be waiting for fetchTopicForMessage to succeed or error
           }
