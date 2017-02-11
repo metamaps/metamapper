@@ -464,8 +464,12 @@ module.exports = function (
         return true;
       },
       run: function (message) {
-        if (projectMapId) projects.getUpdates(rtm, tokens, dmForUserId, userName)
-        else if (tokens[message.user]) createMapForProjects(tokens[message.user], message.channel)
+        if (projectMapId) {
+          projects.getUpdates(rtm, tokens, dmForUserId, userName)
+        }
+        else if (tokens[message.user]) {
+          createMapForProjects(tokens[message.user], message.channel)
+        }
       }
     },
     {

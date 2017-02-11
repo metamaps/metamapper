@@ -1,3 +1,5 @@
+const Promise = require('bluebird')
+
 module.exports = function (team, setProjectMap, authUrl, METAMAPS_URL, persistChannelSetting) {
 
   var CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
@@ -15,8 +17,9 @@ module.exports = function (team, setProjectMap, authUrl, METAMAPS_URL, persistCh
   rtm.start();
 
   function dmForUserId(userId) {
-    var channel = dataStore.getDMByName(dataStore.getUserById(userId).name).id;
-    return channel;
+    var channel = dataStore.getDMByName(dataStore.getUserById(userId).name)
+    if (channel) return Promise.resolve(channel.id)
+    return webBot.dm.open(userId).then(response => response.channel.id)
   }
 
   function userName(userId) {
@@ -43,8 +46,10 @@ module.exports = function (team, setProjectMap, authUrl, METAMAPS_URL, persistCh
 
   function verified(message) {
     if (!tokens[message.user]) {
-      var id = rtm.activeTeamId + message.user;
-      rtm.sendMessage('You haven\'t authenticated yet, please go to ' + authUrl + '?id=' + id, dmForUserId(message.user));
+      var id = rtm.activeTeamId + message.user
+      dmForUserId(message.user).then(dmId => {
+        rtm.sendMessage('You haven\'t authenticated yet, please go to ' + authUrl + '?id=' + id, dmId);
+      })
       return false;
     }
     return true;
@@ -70,7 +75,9 @@ module.exports = function (team, setProjectMap, authUrl, METAMAPS_URL, persistCh
   return {
     addTokenForUser: function addTokenForUser(userId, token) {
       tokens[userId] = token;
-      rtm.sendMessage('Nice! You are now authorized with metamaps.', dmForUserId(userId));
+      dmForUserId(userId).then(dmId => {
+        rtm.sendMessage('Nice! You are now authorized with metamaps.', dmId)
+      })
     },
     addMmUserId: function addMmUserId(mmUserId, userId) {
       mmUserIds[mmUserId] = userId
