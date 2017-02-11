@@ -4,6 +4,7 @@ var app = express();
 var authRoute = '/sign_in';
 var authUrl = process.env.PROTOCOL + '://' + process.env.DOMAIN + authRoute;
 var METAMAPS_URL = process.env.METAMAPS_URL;
+const mmApi = require('./create-from-slack/metamaps')(METAMAPS_URL)
 var metamapsSignInUrl = METAMAPS_URL + '/oauth/authorize';
 var metamapsTokenUrl = METAMAPS_URL + '/oauth/token';
 var metamapsOauthRoute = '/metamaps/confirm';
@@ -31,6 +32,7 @@ var Team = mongoose.model('Team', {
 var Token = mongoose.model('Token', {
   access_token: String,
   key: String,
+  mm_user_id: String,
   user_id: String,
   team_id: String
 });
@@ -60,31 +62,28 @@ Team.find(function (err, teams) {
           return;
         }
         var userTokens = {};
-        tokens.forEach(function (t) { if (t.get('access_token'))  userTokens[t.get('user_id')] = t.get('access_token') });
-        startBotForTeam(team, userTokens, channelSettings);
+        const mmUserIds = {}
+        tokens.forEach(t => {
+          if (t.get('access_token')) {
+            userTokens[t.get('user_id')] = t.get('access_token')
+            mmUserIds[t.get('mm_user_id')] = t.get('user_id')
+          }
+        })
+        startBotForTeam(team, userTokens, mmUserIds, channelSettings)
       });
     });
   });
 });
 
-function startBotForTeam(team, tokens, channelSettings) {
-  channelSettings = channelSettings || []
-  tokens = tokens || {}
-
-  var toPassIn = {
+function startBotForTeam(team, tokens = {}, mmUserIds = {}, channelSettings = []) {
+  const toPassIn = {
     name: team.get('team_name'),
     access_token: team.get('access_token'),
     bot_access_token: team.get('bot_access_token'),
-    bot_user_id: team.get('bot_user_id')
-  };
-  var persistToken = function (userId, token) {
-    var t = new Token({
-      access_token: token,
-      key: team.get('team_id') + userId,
-      user_id: userId,
-      team_id: team.get('team_id')
-    });
-    t.save();
+    bot_user_id: team.get('bot_user_id'),
+    projectMapId: team.get('project_map_id'),
+    mmUserIds,
+    tokens
   };
 
   var persistProjectMap = function (projectMapId) {
@@ -115,7 +114,7 @@ function startBotForTeam(team, tokens, channelSettings) {
     channelSetting.save()
   }
 
-  bots[team.get('team_id')] = metamapBot(toPassIn, team.get('project_map_id'), persistProjectMap, tokens, authUrl, METAMAPS_URL, persistToken, persistChannelSetting); // returns the addTokenForUser function
+  bots[team.get('team_id')] = metamapBot(toPassIn, persistProjectMap, authUrl, METAMAPS_URL, persistChannelSetting); // returns the addTokenForUser function
 }
 
 app.get('/', function (req, res) {
@@ -142,14 +141,12 @@ app.get(metamapsOauthRoute, function (req, res) {
         grant_type: 'authorization_code'
       }
     };
-    console.log(options);
     request.post(options, function (err, response, body) {
       if (err) {
         console.log(err);
         return; // redirect and show error
       }
       body = JSON.parse(body);
-      console.log(body);
       if (!body.access_token) return res.send('There was an error');
       var token = new Token({
         access_token: body.access_token,
@@ -158,8 +155,17 @@ app.get(metamapsOauthRoute, function (req, res) {
         team_id: teamId
       });
       token.save();
-      bots[teamId](userId, body.access_token);
+      bots[teamId].addTokenForUser(userId, body.access_token)
       res.send('ok, you can now make use of metamapper authenticated as yourself!'); // do a redirect here
+      mmApi.getMyId(body.access_token, (err, id) => {
+        if (err) {
+          console.log('error fetching id for user')
+          return
+        }
+        token.set('mm_user_id', id.toString())
+        token.save()
+        bots[teamId].addMmUserId(token.get('mm_user_id'), token.get('user_id'))
+      })
     });
 
 });

@@ -1,4 +1,4 @@
-module.exports = function (team, projectMapId, setProjectMap, dbTokens, authUrl, METAMAPS_URL, persistToken, persistChannelSetting) {
+module.exports = function (team, setProjectMap, authUrl, METAMAPS_URL, persistChannelSetting) {
 
   var CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
   var RtmClient = require('@slack/client').RtmClient;
@@ -6,10 +6,8 @@ module.exports = function (team, projectMapId, setProjectMap, dbTokens, authUrl,
   var RTM_EVENTS = require('@slack/client').RTM_EVENTS;
   var DataStore = require('@slack/client').MemoryDataStore;
   var dataStore = new DataStore();
-  var tokens = dbTokens;
+  const { tokens, mmUserIds, botToken, botId, projectMapId } = team
   var users = {};
-  var botToken = team.bot_access_token;
-  var botId = team.bot_user_id;
 
   var web = new WebClient(team.access_token); // the "App" has different (greater) permissions than the bot
   var webBot = new WebClient(botToken, {logLevel: 'info', dataStore: dataStore});
@@ -32,7 +30,6 @@ module.exports = function (team, projectMapId, setProjectMap, dbTokens, authUrl,
     rtm,
     tokens,
     users,
-    persistToken,
     botId,
     METAMAPS_URL,
     authUrl,
@@ -70,8 +67,13 @@ module.exports = function (team, projectMapId, setProjectMap, dbTokens, authUrl,
 
   rtm.on(RTM_EVENTS.REACTION_ADDED, SLACK.REACTIONS);
 
-  return function addTokenForUser(userId, token) {
-    tokens[userId] = token;
-    rtm.sendMessage('Nice! You are now authorized with metamaps.', dmForUserId(userId));
+  return {
+    addTokenForUser: function addTokenForUser(userId, token) {
+      tokens[userId] = token;
+      rtm.sendMessage('Nice! You are now authorized with metamaps.', dmForUserId(userId));
+    },
+    addMmUserId: function addMmUserId(mmUserId, userId) {
+      mmUserIds[mmUserId] = userId
+    }
   }
 } // end module.exports

@@ -6,7 +6,6 @@ module.exports = function (
   rtm,
   tokens,
   users,
-  persistToken,
   botId,
   METAMAPS_URL,
   signInUrl,

@@ -304,6 +304,19 @@ var toExport = {
       callback(null, body.data, body.page);
     });
   },
+  getMyId: function (token, callback) {
+    request.get({
+      url: `${usersUrl}/current?access_token=${token}`
+    }, function (err, response, body) {
+      if (err || response.statusCode > 200) {
+        console.log(err || `statusCode: ${response.statusCode}`);
+        console.log(`body: ${body}`);
+        return callback('fetching me failed');
+      }
+      var body = JSON.parse(body);
+      callback(null, body.data.id);
+    });
+  },
   createMap: function (name, token, callback) {
     var map = {
       name: name,
