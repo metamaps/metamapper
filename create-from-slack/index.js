@@ -8,10 +8,10 @@ module.exports = function (team, setProjectMap, authUrl, METAMAPS_URL, persistCh
   var RTM_EVENTS = require('@slack/client').RTM_EVENTS;
   var DataStore = require('@slack/client').MemoryDataStore;
   var dataStore = new DataStore();
-  const { tokens, mmUserIds, botToken, botId, projectMapId } = team
+  const { accessToken, tokens, mmUserIds, botToken, botId, projectMapId } = team
   var users = {};
 
-  var web = new WebClient(team.access_token); // the "App" has different (greater) permissions than the bot
+  var web = new WebClient(accessToken); // the "App" has different (greater) permissions than the bot
   var webBot = new WebClient(botToken, {logLevel: 'info', dataStore: dataStore});
   var rtm = new RtmClient(botToken, {logLevel: 'info', dataStore: dataStore});
   rtm.start();

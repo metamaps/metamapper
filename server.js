@@ -78,9 +78,9 @@ Team.find(function (err, teams) {
 function startBotForTeam(team, tokens = {}, mmUserIds = {}, channelSettings = []) {
   const toPassIn = {
     name: team.get('team_name'),
-    access_token: team.get('access_token'),
-    bot_access_token: team.get('bot_access_token'),
-    bot_user_id: team.get('bot_user_id'),
+    accessToken: team.get('access_token'),
+    botToken: team.get('bot_access_token'),
+    botId: team.get('bot_user_id'),
     projectMapId: team.get('project_map_id'),
     mmUserIds,
     tokens
