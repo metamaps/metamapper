@@ -1,6 +1,9 @@
 if (process.env.NODE_ENV !== 'production') require('dotenv').config();
 var express = require('express');
+var bodyParser = require('body-parser')
+var MetaInspector = require('minimal-metainspector');
 var app = express();
+app.use(bodyParser.json())
 var authRoute = '/sign_in';
 var authUrl = process.env.PROTOCOL + '://' + process.env.DOMAIN + authRoute;
 var METAMAPS_URL = process.env.METAMAPS_URL;
@@ -200,6 +203,40 @@ app.get('/slack/confirm', function (req, res) {
       startBotForTeam(team);
       res.send('ok, the metamapper has been added for your team'); // do a redirect here
     });
+});
+
+app.post('/slack-special-endpoint-123', function (req, res) {
+
+  //console.log(req.body)
+  var teamId = 'T0A76MJUV'
+  var channelId = 'C4HA431RS'
+  // acknowledge that we've received the message from slack
+  if (req.body.challenge) res.send(req.body.challenge)
+  else res.send('ok')
+
+  // get the data off the request
+  var event = req.body.event
+  if (event && req.body.team_id === teamId && event.channel === channelId && !event.subtype){
+
+    var link = event.text.substr(1,event.text.length - 2)
+    var client = new MetaInspector(link, {});
+
+    client.on("fetch", function(){
+      // send the data through to IFTTT
+      var options = {
+        url: 'https://maker.ifttt.com/trigger/rss3/with/key/dDAh9bqkTvtTbfTmo6DDxL',
+        form: {
+          'value1': link,
+          'value2': client.title,
+          'value3': req.body
+        }
+      }
+      request.post(options)
+    });
+
+    client.fetch();
+
+  }
 });
 
 app.listen(process.env.PORT, function () {
