@@ -206,36 +206,56 @@ app.get('/slack/confirm', function (req, res) {
 });
 
 app.post('/slack-special-endpoint-123', function (req, res) {
-
-  //console.log(req.body)
   var teamId = 'T0A76MJUV'
   var channelId = 'C4HA431RS'
+
   // acknowledge that we've received the message from slack
   if (req.body.challenge) res.send(req.body.challenge)
   else res.send('ok')
 
+  console.log(req.body)
+
   // get the data off the request
   var event = req.body.event
-  if (event && req.body.team_id === teamId && event.channel === channelId && !event.subtype){
 
-    var link = event.text.substr(1,event.text.length - 2)
-    var client = new MetaInspector(link, {});
+  if (event && event.text !== null && req.body.team_id === teamId && event.channel === channelId && event.subtype !== "message_changed"){
 
-    client.on("fetch", function(){
-      // send the data through to IFTTT
+    var link = event.text.substr(2,event.text.length - 4).split("|")[0]
+    var title = event.text.substr(2,event.text.length - 4).split("|")[1]
+
+    var urlRegEx = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
+
+    if(urlRegEx.test(link)){
+      var client = new MetaInspector(link, {});
+
+      client.on("fetch", function(){
+        // send the data through to IFTTT
+        var options = {
+          url: 'https://maker.ifttt.com/trigger/rss3/with/key/dDAh9bqkTvtTbfTmo6DDxL',
+          form: {
+            'value1': link,
+            'value2': client.title,
+            'value3': title
+          }
+        }
+        console.log(options)
+        request.post(options)
+      });
+
+      client.fetch();
+    }
+    else{
       var options = {
         url: 'https://maker.ifttt.com/trigger/rss3/with/key/dDAh9bqkTvtTbfTmo6DDxL',
         form: {
-          'value1': link,
-          'value2': client.title,
-          'value3': req.body
+          'value1': event.text,
+          'value2': "",
+          'value3': ""
         }
       }
+      console.log(options)
       request.post(options)
-    });
-
-    client.fetch();
-
+    }
   }
 });
 
