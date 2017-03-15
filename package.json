@@ -12,7 +12,8 @@
     "emojipacks": "0.0.5",
     "express": "^4.13.4",
     "mongoose": "^4.4.8",
-    "request": "^2.69.0"
+    "request": "^2.69.0",
+    "minimal-metainspector": "1.4.28"
   },
   "scripts": {
     "start": "node server.js"
