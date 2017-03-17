@@ -408,6 +408,7 @@ module.exports = function (
         ], message.user, message.channel, message.ts);
       }
     },
+/*
     {
       cmd: "projects",
       variable: "",
@@ -486,6 +487,7 @@ module.exports = function (
         setLocalProjectMap(mapId, message.channel)
       }
     },
+*/
     {
       cmd: '<@' + botId + '> help',
       variable: "",
