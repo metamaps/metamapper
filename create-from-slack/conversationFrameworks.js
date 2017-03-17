@@ -24,25 +24,25 @@ export const NO_ANSWERS = [
 ]
 
 //new line
-export const nl => (text) {
+export const nl = (text) => {
   return text + ' \n'
 }
 
 //bold
-export const bd => (text) {
+export const bd = (text) => {
   return '*' + text + '*'
 }
 
 // instructions
-export const ins => () {
+export const ins = () => {
   return ' (respond *yes*, *no*, or *cancel*)'
 }
 
-export const yesNoQstn => (rtm, send, question, yes, no, dontMessage) {
+export const yesNoQstn = (rtm, channel, send, question, yes, no, dontMessage) => {
   if (!dontMessage) send(question + ins())
   rtm.once(RTM_EVENTS.MESSAGE, (message) => {
-    if (message.channel !== dm) {
-      yesNoQstn(rtm, send, question, yes, no, true)
+    if (message.channel !== channel) {
+      yesNoQstn(rtm, channel, send, question, yes, no, true)
       return
     }
     else if (YES_ANSWERS.indexOf(message.text) > -1) return yes()
@@ -51,21 +51,21 @@ export const yesNoQstn => (rtm, send, question, yes, no, dontMessage) {
       send('Ok, let\'s continue the conversation later.')
     }
     else {
-      yesNoQstn(rtm, send, question, yes, no, true)
+      yesNoQstn(rtm, channel, send, question, yes, no, true)
     }
   })
 }
 
-export const actionTillDone => (rtm, action, done) {
+export const actionTillDone = (rtm, channel, action, done) => {
   rtm.once(RTM_EVENTS.MESSAGE, (message) => {
-    if (message.channel !== dm) {
-      actionTillDone(action, done)
+    if (message.channel !== channel) {
+      actionTillDone(rtm, channel, action, done)
       return
     }
     else if (message.text === 'done') return done()
     else {
-      action(message.text)
-      actionTillDone(action, done)
+      action(message)
+      actionTillDone(rtm, channel, action, done)
     }
   })
 }
