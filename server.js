@@ -206,20 +206,52 @@ app.get('/slack/confirm', function (req, res) {
 });
 
 app.post('/slack-special-endpoint-123', function (req, res) {
+  /* Example slack data from nuzzel links
+  { token: 'nlbSeAI84dZeYDbvlewO4Wg9',
+  team_id: 'T0A76MJUV',
+  api_app_id: 'A4HK6227M',
+  event:
+   { text: '*<http://www.ncbi.nlm.nih.gov/pubmed/24916974|Impact of home-delivered meal programs on diet and nutrition among older adults: a review. - PubMed - NCBI>*',
+     bot_id: 'B4H968ARY',
+     attachments: [ [
+
+        { fallback: '256x256px image',
+        image_url: 'http://www.ncbi.nlm.nih.gov/coreutils/img/pubmed256blue.png',
+        image_width: 256,
+        image_height: 256,
+        image_bytes: 13298,
+        text: '<http://ncbi.nlm.nih.gov|ncbi.nlm.nih.gov> - Zhu H - Poor diet quality and insufficient nutrient intake is of particular co cern among older adults. The Older Americans Act of 1965 authorizes home-delivered meal services to homebound individuals aged 60 years and older. The purpose of this study was…',
+        pretext: 'Shared by 9 friends of <http://nuzzel.com/Bortseb|Robert Best>. View <http://nuzzel.com/story/03162017/ncbi.nlm.nih/impact_of_homedelivered_meal_programs_on_diet_and_nutrition_among?utm_campaign=alert&amp;utm_medium=slack&amp;utm_source=app&amp;e=226952|comments and more info> on <http://nuzzel.com|Nuzzel>',
+        id: 1 }
+
+     ] ],
+     type: 'message',
+     subtype: 'bot_message',
+     ts: '1489753272.735468',
+     channel: 'C4HA431RS',
+     event_ts: '1489753272.735468' },
+  type: 'event_callback',
+  authed_users: [ 'U0A76NT47' ],
+  event_id: 'Ev4LH3LV2S',
+  event_time: 1489753272 }
+
+  */
+
   var teamId = 'T0A76MJUV'
   var channelId = 'C4HA431RS'
+  var nuzChannelId = 'C0DMDKCDR'
 
   // acknowledge that we've received the message from slack
   if (req.body.challenge) res.send(req.body.challenge)
   else res.send('ok')
 
-  console.log(req.body)
+  console.log("UNFILTERED", req.body)
 
   // get the data off the request
   var event = req.body.event
 
   if (event && event.text !== null && req.body.team_id === teamId && event.channel === channelId && event.subtype !== "message_changed"){
-
+    console.log("FILTERED", req.body)
     var link = event.text.substr(2,event.text.length - 4).split("|")[0]
     var title = event.text.substr(2,event.text.length - 4).split("|")[1]
 
@@ -235,7 +267,7 @@ app.post('/slack-special-endpoint-123', function (req, res) {
           form: {
             'value1': link,
             'value2': client.title,
-            'value3': title
+            'value3': event.attachments[0].pretext
           }
         }
         console.log(options)
@@ -257,6 +289,46 @@ app.post('/slack-special-endpoint-123', function (req, res) {
       request.post(options)
     }
   }
+  if (event && event.text !== null && req.body.team_id === teamId && event.channel === nuzChannelId && event.subtype !== "message_changed"){
+    console.log("FILTERED", req.body)
+    var link = event.text.substr(2,event.text.length - 4).split("|")[0]
+    var title = event.text.substr(2,event.text.length - 4).split("|")[1]
+
+    var urlRegEx = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
+
+    if(urlRegEx.test(link)){
+      var client = new MetaInspector(link, {});
+
+      client.on("fetch", function(){
+        // send the data through to IFTTT
+        var options = {
+          url: 'https://maker.ifttt.com/trigger/nuzzel/with/key/dDAh9bqkTvtTbfTmo6DDxL',
+          form: {
+            'value1': link,
+            'value2': client.title,
+            'value3': event.attachments[0].pretext
+          }
+        }
+        console.log(options)
+        request.post(options)
+      });
+
+      client.fetch();
+    }
+    else{
+      var options = {
+        url: 'https://maker.ifttt.com/trigger/nuzzel/with/key/dDAh9bqkTvtTbfTmo6DDxL',
+        form: {
+          'value1': event.text,
+          'value2': "",
+          'value3': ""
+        }
+      }
+      console.log(options)
+      request.post(options)
+    }
+  }
+
 });
 
 app.listen(process.env.PORT, function () {
