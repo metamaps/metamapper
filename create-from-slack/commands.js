@@ -302,7 +302,7 @@ module.exports = function (
           if (err) {
             return rtm.sendMessage('There was an error in setting your map. (Fetch Issue)', message.channel);
           }
-          web.chat.postMessage(message.channel, 'The current map is ' + linkWithMapName(id, map.name) + ' (ID: ' + id + ')');
+          web.chat.postMessage(message.channel, 'The current map is now set to: ' + linkWithMapName(id, map.name) + ' (ID: ' + id + ')');
         });
       }
     },
