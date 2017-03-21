@@ -19,6 +19,7 @@ module.exports = function (
 
   var Metamaps = require('./metamaps.js')(METAMAPS_URL)
   var projects = require('./projects.js')(METAMAPS_URL)
+  var yesNoQstn = require('./conversationFrameworks').yesNoQstn
   var metacodes = Metamaps.metacodes
 
   const getArchiveLink = (channelId, messageId) => {
@@ -408,101 +409,39 @@ module.exports = function (
         ], message.user, message.channel, message.ts);
       }
     },
-/*
     {
-      cmd: "projects",
+      cmd: "feedback",
       variable: "",
       inHelpList: true,
-      helpText: "see who is working on what projects",
+      ambiguous: "Are you saying you have some feedback for me?",
+      helpText: "provide me with some feedback about how I work",
       requireUser: false,
       check: function (message) {
         return true;
       },
       run: function (message) {
-        if (projectMapId) {
-          projects.displayAll(tokens[message.user], function (err, prjcts) {
-            if (err) {
-              console.log(err)
-              prjcts = 'There was an error fetching your projects. Try again?'
-            }
-            if (!prjcts) prjcts = 'There are no active projects'
-            rtm.sendMessage(prjcts, message.channel)
-          })
-        }
-        else if (tokens[message.user]) createMapForProjects(tokens[message.user], message.channel)
+        var topic_name = message.text.substring(4);
+        postTopicsToMetamaps([
+          { name: topic_name.trim() }
+        ], message.user, message.channel, message.ts);
       }
     },
     {
-      cmd: "my projects",
+      cmd: 'help',
       variable: "",
       inHelpList: true,
-      helpText: "see my projects and collaborators",
-      requireUser: true,
-      check: function (message) {
-        return true;
-      },
-      run: function (message) {
-        if (projectMapId) {
-          projects.displayForUser(userName(message.user), tokens[message.user], function (err, prjcts) {
-            if (err) {
-              console.log(err)
-              prjcts = 'There was an error fetching your projects. Try again?'
-            }
-            if (!prjcts) prjcts = 'You have no active projects'
-            rtm.sendMessage(prjcts, message.channel)
-          })
-        }
-        else if (tokens[message.user]) createMapForProjects(tokens[message.user], message.channel)
-      }
-    },
-    {
-      cmd: '<@' + botId + '> update projects',
-      variable: "",
-      inHelpList: true,
-      helpText: "update who is working on what projects",
+      ambiguous: 'Do you mean me?',
+      helpText: "list all the instructions that I understand",
       requireUser: false,
       check: function (message) {
         return true;
       },
       run: function (message) {
-        if (projectMapId) {
-          projects.getUpdates(rtm, tokens, dmForUserId, userName)
-        }
-        else if (tokens[message.user]) {
-          createMapForProjects(tokens[message.user], message.channel)
-        }
-      }
-    },
-    {
-      cmd: 'set project map id ',
-      variable: "[MAP_ID]",
-      inHelpList: false,
-      helpText: "set the map which stores project data",
-      requireUser: false,
-      check: function (message) {
-        return true;
-      },
-      run: function (message) {
-        var mapId = message.text.substring(19)
-        setLocalProjectMap(mapId, message.channel)
-      }
-    },
-*/
-    {
-      cmd: '<@' + botId + '> help',
-      variable: "",
-      inHelpList: true,
-      helpText: "list all the commands that metamapper knows",
-      requireUser: false,
-      check: function (message) {
-        return true;
-      },
-      run: function (message) {
-        var help = 'Hi de ho heyo!\n';
+        var help = 'Excellent, that\'s something I can do! Here\'s what else I can do:\n';
         COMMANDS.forEach(function (command) {
-          if (command.inHelpList) help += '*' + command.cmd + command.variable + '* ' + command.helpText + '\n';
-        });
-        rtm.sendMessage(help, message.channel);
+          if (command.inHelpList) help += '*' + command.cmd + command.variable + '* ' + command.helpText + '\n'
+        })
+        rtm.sendMessage(help, message.channel)
       }
     }
   ];

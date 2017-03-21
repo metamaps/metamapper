@@ -10,7 +10,6 @@ module.exports = function (team, setProjectMap, authUrl, METAMAPS_URL, persistCh
   var dataStore = new DataStore();
   const { accessToken, tokens, mmUserIds, botToken, botId, projectMapId } = team
   var users = {};
-
   var web = new WebClient(accessToken); // the "App" has different (greater) permissions than the bot
   var webBot = new WebClient(botToken, {logLevel: 'info', dataStore: dataStore});
   var rtm = new RtmClient(botToken, {logLevel: 'info', dataStore: dataStore});
