@@ -292,8 +292,9 @@ module.exports = function (
         return true;
       },
       run: function (message) {
-        setChannelSetting(message.channel, 'map', message.text.substring(8));
-        var id = getChannelSetting(message.channel, 'map');
+        var id = message.text.substring(8)
+        setChannelSetting(message.channel, 'map', id);
+
         if (!id) {
           return rtm.sendMessage('There was an error in setting your map. (ID Issue)', message.channel);
         }
