@@ -293,7 +293,16 @@ module.exports = function (
       },
       run: function (message) {
         setChannelSetting(message.channel, 'map', message.text.substring(8));
-        rtm.sendMessage('Ok, I\'ve switched to map ' + getChannelSetting(message.channel, 'map') + ' for this channel', message.channel);
+        var id = getChannelSetting(message.channel, 'map');
+        if (!id) {
+          return rtm.sendMessage('There was an error in setting your map. (ID Issue)', message.channel);
+        }
+        Metamaps.getMap(id, tokens[message.user], function (err, map) {
+          if (err) {
+            return rtm.sendMessage('There was an error in setting your map. (Fetch Issue)', message.channel);
+          }
+          web.chat.postMessage(message.channel, 'The current map is ' + linkWithMapName(id, map.name) + ' (ID: ' + id + ')');
+        });
       }
     },
     {

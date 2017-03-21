@@ -250,13 +250,13 @@ db.once('open', function() {
     if (req.body.challenge) res.send(req.body.challenge)
     else res.send('ok')
 
-    console.log("UNFILTERED", req.body)
+    //console.log("UNFILTERED", req.body)
 
     // get the data off the request
     var event = req.body.event
 
     if (event && event.text !== null && req.body.team_id === teamId && event.channel === channelId && event.subtype !== "message_changed"){
-      console.log("FILTERED", req.body)
+      console.log("FILTERED TORSS", req.body)
       var link = event.text.substr(2,event.text.length - 4).split("|")[0]
       var title = event.text.substr(2,event.text.length - 4).split("|")[1]
 
@@ -272,7 +272,7 @@ db.once('open', function() {
       request.post(options)
     }
     if (event && event.text !== null && req.body.team_id === teamId && event.channel === nuzChannelId && event.subtype !== "message_changed"){
-      console.log("FILTERED", req.body)
+      console.log("FILTERED NUZ", req.body)
       var link = event.text.substr(2,event.text.length - 4).split("|")[0]
       var title = event.text.substr(2,event.text.length - 4).split("|")[1]
 
