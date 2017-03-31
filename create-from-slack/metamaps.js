@@ -344,7 +344,8 @@ var toExport = {
     topics.forEach(t => {
       const metacode = toExport.findMetacodeByNameIdOrEmoji(t.metacode_id)
       string += `:${metacode[2]}: `
-      string += `<${noApiRootUrl}/topics/${t.id}|${t.name}> (${metacode[0]} ID: ${t.id})\n`
+      const mapID = metacode[0] === "Metamap" ? 'ID: ' + t.id : ''
+      string += `<${noApiRootUrl}/topics/${t.id}|${t.name}> (${metacode[0]} ${mapID})\n`
     })
     return string
   },
