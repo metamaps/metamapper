@@ -219,20 +219,6 @@ module.exports = function (
       }
     },
     {
-      cmd: "",
-      variable: "",
-      inHelpList: false,
-      requireUser: true,
-      check: function (message) {
-        return getChannelSetting(message.channel, 'capture');
-      },
-      run: function (message) {
-        postTopicsToMetamaps([
-          { name: message.text.trim() }
-        ], message.user, message.channel, message.ts);
-      }
-    },
-    {
       cmd: "signed in?",
       variable: "",
       inHelpList: true,
@@ -435,6 +421,20 @@ module.exports = function (
           if (command.inHelpList) help += '*' + command.cmd + command.variable + '* ' + command.helpText + '\n'
         })
         rtm.sendMessage(help, message.channel)
+      }
+    },
+    {
+      cmd: "",
+      variable: "",
+      inHelpList: false,
+      requireUser: true,
+      check: function (message) {
+        return getChannelSetting(message.channel, 'capture');
+      },
+      run: function (message) {
+        postTopicsToMetamaps([
+          { name: message.text.trim() }
+        ], message.user, message.channel, message.ts);
       }
     }
   ];
