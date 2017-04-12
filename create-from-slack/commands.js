@@ -420,23 +420,6 @@ module.exports = function (
       }
     },
     {
-      cmd: "feedback",
-      variable: "",
-      inHelpList: true,
-      ambiguous: "Are you saying you have some feedback for me?",
-      helpText: "provide me with some feedback about how I work",
-      requireUser: false,
-      check: function (message) {
-        return true;
-      },
-      run: function (message) {
-        var topic_name = message.text.substring(4);
-        postTopicsToMetamaps([
-          { name: topic_name.trim() }
-        ], message.user, message.channel, message.ts);
-      }
-    },
-    {
       cmd: 'help',
       variable: "",
       inHelpList: true,
