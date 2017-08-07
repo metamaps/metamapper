@@ -247,6 +247,7 @@ db.once('open', function() {
     var nuzChannelId = 'C0DMDKCDR'
 
     // acknowledge that we've received the message from slack
+    //The magic happens here
     if (req.body.challenge) res.send(req.body.challenge)
     else res.send('ok')
 
@@ -271,6 +272,7 @@ db.once('open', function() {
       console.log(options)
       request.post(options)
     }
+
   });
 
   app.listen(process.env.PORT, function () {
