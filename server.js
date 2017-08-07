@@ -271,22 +271,6 @@ db.once('open', function() {
       console.log(options)
       request.post(options)
     }
-    if (event && event.text !== null && req.body.team_id === teamId && event.channel === nuzChannelId && event.subtype !== "message_changed"){
-      console.log("FILTERED NUZ", req.body)
-      var link = event.text.substr(2,event.text.length - 4).split("|")[0]
-      var title = event.text.substr(2,event.text.length - 4).split("|")[1]
-
-      var options = {
-        url: 'https://maker.ifttt.com/trigger/nuzzel/with/key/dDAh9bqkTvtTbfTmo6DDxL',
-        form: {
-          'value1': link,
-          'value2': title,
-          'value3': event.attachments[0].pretext
-        }
-      }
-      console.log(options)
-      request.post(options)
-    }
   });
 
   app.listen(process.env.PORT, function () {
