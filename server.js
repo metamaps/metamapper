@@ -259,7 +259,7 @@ db.once('open', function() {
     if (event && event.text !== null && req.body.team_id === teamId && event.channel === channelId && event.subtype !== "message_changed"){
       console.log("FILTERED TORSS", req.body)
       var link = event.text.substr(2,event.text.length - 4).split("|")[0]
-      var title = event.text.substr(2,event.text.length - 4).split("|")[1]
+      var title = event.text.substr(2,event.text.length - 4).substr(link.length + 1)
 
       var options = {
         url: 'https://maker.ifttt.com/trigger/rss3/with/key/dDAh9bqkTvtTbfTmo6DDxL',
