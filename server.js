@@ -243,52 +243,45 @@ db.once('open', function() {
     */
 
     var teamId = 'T0A76MJUV'
-    var channelId = 'C4HA431RS' //torss
-    var nuzChannelId = 'C0DMDKCDR'
+    //channel IDs
+    var torss = 'C4HA431RS'
+    var commonsify_feed = 'C6SEWS5S4'
+
 
     // acknowledge that we've received the message from slack
     //The magic happens here
     if (req.body.challenge) res.send(req.body.challenge)
     else res.send('ok')
 
-    //console.log("UNFILTERED", req.body)
-
     // get the data off the request
     var event = req.body.event
+    var link = event.text.substr(2,event.text.length - 4).split("|")[0]
+    var title = event.text.substr(2,event.text.length - 4).substr(link.length + 1)
 
-    if (event && event.text !== null && req.body.team_id === teamId && event.channel === channelId && event.subtype !== "message_changed"){
-      //console.log("FILTERED TORSS", req.body)
-      var link = event.text.substr(2,event.text.length - 4).split("|")[0]
-      var title = event.text.substr(2,event.text.length - 4).substr(link.length + 1)
-
-      var options = {
-        url: 'https://maker.ifttt.com/trigger/rss3/with/key/dDAh9bqkTvtTbfTmo6DDxL',
+    //torss
+    if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && event.subtype !== "message_changed"){
+      request.post({
+        url: 'https://maker.ifttt.com/trigger/torss/with/key/dDAh9bqkTvtTbfTmo6DDxL',
         form: {
           'value1': link,
           'value2': title,
           'value3': event.attachments[0].pretext
         }
-      }
-      //console.log(options)
-      request.post(options)
+      })
     }
 
-    if (event && event.text !== null && req.body.team_id === teamId && event.subtype !== "message_changed"){
-      //console.log("FILTERED TORSS", req.body)
-      var text = event.text.substr(2,event.text.length - 4).split("|")[0]
-      var channel = event.channel
-
-      var options2 = {
-        url: 'https://maker.ifttt.com/trigger/detid/with/key/dDAh9bqkTvtTbfTmo6DDxL',
+    if (event && event.text !== null && req.body.team_id === teamId && event.channel === commonsify_feed && event.subtype !== "message_changed"){
+      request.post({
+        url: 'https://maker.ifttt.com/trigger/commonsify_feed/with/key/dDAh9bqkTvtTbfTmo6DDxL',
         form: {
-          'value1': text,
-          'value2': channel,
+          'value1': link,
+          'value2': title,
           'value3': event.attachments[0].pretext
         }
-      }
-      //console.log(options2)
-      request.post(options2)
+      })
     }
+
+
 
   });
 
