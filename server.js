@@ -243,7 +243,7 @@ db.once('open', function() {
     */
 
     var teamId = 'T0A76MJUV'
-    var channelId = 'C4HA431RS'
+    var channelId = 'C4HA431RS' //torss
     var nuzChannelId = 'C0DMDKCDR'
 
     // acknowledge that we've received the message from slack
@@ -257,7 +257,7 @@ db.once('open', function() {
     var event = req.body.event
 
     if (event && event.text !== null && req.body.team_id === teamId && event.channel === channelId && event.subtype !== "message_changed"){
-      console.log("FILTERED TORSS", req.body)
+      //console.log("FILTERED TORSS", req.body)
       var link = event.text.substr(2,event.text.length - 4).split("|")[0]
       var title = event.text.substr(2,event.text.length - 4).substr(link.length + 1)
 
@@ -269,8 +269,25 @@ db.once('open', function() {
           'value3': event.attachments[0].pretext
         }
       }
-      console.log(options)
+      //console.log(options)
       request.post(options)
+    }
+
+    if (event && event.text !== null && req.body.team_id === teamId && event.subtype !== "message_changed"){
+      //console.log("FILTERED TORSS", req.body)
+      var text = event.text.substr(2,event.text.length - 4).split("|")[0]
+      var channel = event.channel
+
+      var options2 = {
+        url: 'https://maker.ifttt.com/trigger/detid/with/key/dDAh9bqkTvtTbfTmo6DDxL',
+        form: {
+          'value1': text,
+          'value2': channel,
+          'value3': event.attachments[0].pretext
+        }
+      }
+      //console.log(options2)
+      request.post(options2)
     }
 
   });
