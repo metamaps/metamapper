@@ -257,6 +257,8 @@ db.once('open', function() {
     var event = req.body.event
     var link = event.text.substr(2,event.text.length - 4).split("|")[0]
     var title = event.text.substr(2,event.text.length - 4).substr(link.length + 1)
+    var nuzzelData = event.attachments[0].pretext
+    var source = nuzzelData.split("|")[1].split(">")[0]
 
     //torss
     if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && event.subtype !== "message_changed"){
@@ -265,18 +267,18 @@ db.once('open', function() {
         form: {
           'value1': link,
           'value2': title,
-          'value3': event.attachments[0].pretext
+          'value3': nuzzelData
         }
       })
     }
 
-    if (event && event.text !== null && req.body.team_id === teamId && event.channel === commonsify_feed && event.subtype !== "message_changed"){
+    if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source === "commonsify" && event.subtype !== "message_changed"){
       request.post({
         url: 'https://maker.ifttt.com/trigger/commonsify_feed/with/key/dDAh9bqkTvtTbfTmo6DDxL',
         form: {
           'value1': link,
           'value2': title,
-          'value3': event.attachments[0].pretext
+          'value3': nuzzelData
         }
       })
     }
