@@ -246,6 +246,7 @@ db.once('open', function() {
     //channel IDs
     var torss = 'C4HA431RS'
     var commonsify_feed = 'C6SEWS5S4'
+    var CryptoICT = 'C65N61U4D'
 
 
     // acknowledge that we've received the message from slack
@@ -272,9 +273,22 @@ db.once('open', function() {
       })
     }
 
+    //commonsify
     if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source === "commonsify" && event.subtype !== "message_changed"){
       request.post({
         url: 'https://maker.ifttt.com/trigger/commonsify_feed/with/key/dDAh9bqkTvtTbfTmo6DDxL',
+        form: {
+          'value1': link,
+          'value2': title,
+          'value3': nuzzelData
+        }
+      })
+    }
+
+    //cryptoICT
+    if (event && event.text !== null && req.body.team_id === teamId && event.channel === CryptoICT && event.subtype !== "message_changed"){
+      request.post({
+        url: 'https://maker.ifttt.com/trigger/CryptoICT/with/key/dsQlYVJ5ABZfQD1sZzZTrF',
         form: {
           'value1': link,
           'value2': title,
