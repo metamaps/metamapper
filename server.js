@@ -297,6 +297,17 @@ db.once('open', function() {
       })
     }
 
+    //futurutuf
+    if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source === "futurutuf" && event.subtype !== "message_changed"){
+      request.post({
+        url: 'https://maker.ifttt.com/trigger/futurutuf/with/key/dDAh9bqkTvtTbfTmo6DDxL',
+        form: {
+          'value1': link,
+          'value2': title,
+          'value3': nuzzelData
+        }
+      })
+    }
 
 
   });
