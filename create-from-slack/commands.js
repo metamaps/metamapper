@@ -422,9 +422,13 @@ module.exports = function (
         const context = {
           dataStore,
           webBot: web,
+          rtmBot: rtm,
           tokens,
-          mapId
+          mapId,
+          who: message.user
         }
+        rtm.sendMessage('Beginning an opinion poll of map ' + mapId + '.', message.channel)
+        rtm.sendMessage('Results will be posted here when everyone has completed it.', message.channel)
           // only get the list of topics once, add it to context
         Metamaps.getMap(mapId, tokens[message.user], function (err, map) {
           if (err) {
@@ -437,7 +441,8 @@ module.exports = function (
               rtm.sendMessage('There was an error fetching the map', message.channel)
               return
             }
-            rtm.sendMessage(JSON.stringify(responses), message.channel)
+            const output = 'Here are the responses: \n' + JSON.stringify(responses)
+            rtm.sendMessage(output, message.channel)
           })
         })
       }

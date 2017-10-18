@@ -23,9 +23,10 @@ module.exports.sendMessageToSlackResponseURL = sendMessageToSlackResponseURL
 function interactiveResponse (context, dm, config, cb) {
   const { webBot } = context
   const { text, options } = config
+  const outerText = config.outerText || ""
   const callback_id = uuid()
   const toAttach = buttonAttachments(text, options, callback_id)
-  webBot.chat.postMessage(dm, "", toAttach, function (err, response) {
+  webBot.chat.postMessage(dm, outerText, toAttach, function (err, response) {
     if (err) {
       cb(err)
       return
