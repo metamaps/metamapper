@@ -55,6 +55,7 @@ function handleInteractiveResponse (payload, res) {
 
   const value = actions[0].value
   let updated
+  // todo: move this to a config option like 'replaceWith'
   if (value === "1") {
     updated = ":white_check_mark: You agreed"
   } else if (value === "-1") {
