@@ -1,26 +1,29 @@
-var request = require('request');
-var noApiRootUrl,
-    rootUrl,
-    synapseCreateUrl,
-    topicCreateUrl,
-    mappingCreateUrl,
-    mappingDeleteUrl,
-    mapCreateUrl,
-    mapsUrl,
-    mapUrl,
-    usersUrl,
-    coordForMap = {};
+if (process.env.NODE_ENV !== 'production') require('dotenv').config()
+var request = require('request')
+var METAMAPS_URL = process.env.METAMAPS_URL
+var noApiRootUrl = METAMAPS_URL
+var rootUrl = METAMAPS_URL + '/api/v2'
+var topicCreateUrl = rootUrl + '/topics'
+var synapseCreateUrl = rootUrl + '/synapses'
+var mappingCreateUrl = rootUrl + '/mappings'
+var mappingDeleteUrl = rootUrl + '/mappings' // + ID
+var mapCreateUrl = rootUrl + '/maps'
+var mapsUrl = rootUrl + '/maps'
+var topicsUrl = rootUrl + '/topics'
+var mapUrl = rootUrl + '/maps/' // + ID
+var usersUrl = rootUrl + '/users'
+var coordForMap = {}
 
 function incrementX(mapId) {
   if (typeof coordForMap[mapId] !== 'undefined') {
-    coordForMap[mapId] = coordForMap[mapId] + 300;
+    coordForMap[mapId] = coordForMap[mapId] + 300
   } else {
-      coordForMap[mapId] = 0;
+      coordForMap[mapId] = 0
   }
-  return coordForMap[mapId];
+  return coordForMap[mapId]
 }
 
-var toExport = {
+module.exports = {
   metacodes: [
     // first column is metacode name, second column is metacode id
     ["Location",      21578242,   'mm_location'],
@@ -123,14 +126,14 @@ var toExport = {
   ],
   emojiRegex: /:mm_\w+:/g,
   findMetacodeEmojiInText: function (text) {
-    const regMatch = toExport.emojiRegex.exec(text)
+    const regMatch = module.exports.emojiRegex.exec(text)
     return regMatch && regMatch[0].split(':')[1]
   },
   findMetacodeByNameIdOrEmoji: function (nameIdOrEmoji) {
     let m
     const type = typeof nameIdOrEmoji === 'number' ? 'id' :
                    nameIdOrEmoji.slice(0,3) === 'mm_' ? 'emoji' : 'name'
-    toExport.metacodes.forEach(function (metacode) {
+    module.exports.metacodes.forEach(function (metacode) {
       if ((type === 'name' && metacode[0].toLowerCase() === nameIdOrEmoji.toLowerCase())
           || (type === 'emoji' && metacode[2] === nameIdOrEmoji)
           || (type === 'id' && metacode[1] === nameIdOrEmoji)) {
@@ -140,15 +143,15 @@ var toExport = {
     return m
   },
   findMetacodeName: function (idOrEmoji) {
-    const metacode = toExport.findMetacodeByNameIdOrEmoji(idOrEmoji)
+    const metacode = module.exports.findMetacodeByNameIdOrEmoji(idOrEmoji)
     return metacode && metacode[0]
   },
   findMetacodeId: function (nameOrEmoji) {
-    const metacode = toExport.findMetacodeByNameIdOrEmoji(nameOrEmoji)
+    const metacode = module.exports.findMetacodeByNameIdOrEmoji(nameOrEmoji)
     return metacode && metacode[1]
   },
   findMetacodeEmoji: function (idOrName) {
-    const metacode = toExport.findMetacodeByNameIdOrEmoji(idOrName)
+    const metacode = module.exports.findMetacodeByNameIdOrEmoji(idOrName)
     return metacode && metacode[2]
   },
   addTopicToMap: function (map, topic, token, callback) {
@@ -157,8 +160,8 @@ var toExport = {
       topic.desc = '...' + topic.name.substr(137) + '\n' + topic.desc
       topic.name = topic.name.slice(0, 137) + '...'
     }
-    topic.permission = topic.permission || 'commons';
-    topic.link = topic.link || '';
+    topic.permission = topic.permission || 'commons'
+    topic.link = topic.link || ''
     request.post({
       url: topicCreateUrl,
       form: {
@@ -167,19 +170,19 @@ var toExport = {
       }
     }, function (err, response, body) {
       if (err || response.statusCode > 200) {
-        console.log(err || 'statusCode: ' + response.statusCode);
-        console.log('body: ', body);
-        return callback('topic failed');
+        console.log(err || 'statusCode: ' + response.statusCode)
+        console.log('body: ', body)
+        return callback('topic failed')
       }
-      var body = JSON.parse(body);
-      var topicId = body.data.id;
+      var body = JSON.parse(body)
+      var topicId = body.data.id
       var mapping = {
         mappable_id: topicId,
         mappable_type: 'Topic',
         map_id: map,
         xloc: incrementX(map),
         yloc: 0
-      };
+      }
       request.post({
         url: mappingCreateUrl,
         form: {
@@ -188,18 +191,18 @@ var toExport = {
         }
       }, function (err, response, body) {
         if (err || response.statusCode > 200) {
-          console.log(err || 'statusCode: ' + response.statusCode);
-          console.log('body: ', body);
-          return callback('mapping failed', topicId);
+          console.log(err || 'statusCode: ' + response.statusCode)
+          console.log('body: ', body)
+          return callback('mapping failed', topicId)
         }
-        var body = JSON.parse(body);
-        callback(null, topicId, body.data.id);
-      });
-    });
+        var body = JSON.parse(body)
+        callback(null, topicId, body.data.id)
+      })
+    })
   },
   addSynapseToMap: function (map, synapse, token, callback) {
-    synapse.permission = synapse.permission || 'commons';
-    synapse.desc = synapse.desc || '';
+    synapse.permission = synapse.permission || 'commons'
+    synapse.desc = synapse.desc || ''
     request.post({
       url: synapseCreateUrl,
       form: {
@@ -208,17 +211,17 @@ var toExport = {
       }
     }, function (err, response, body) {
       if (err || response.statusCode > 200) {
-        console.log(err || 'statusCode: ' + response.statusCode);
-        console.log('body: ', body);
-        return callback('synapse failed');
+        console.log(err || 'statusCode: ' + response.statusCode)
+        console.log('body: ', body)
+        return callback('synapse failed')
       }
-      var body = JSON.parse(body);
-      var synapseId = body.data.id;
+      var body = JSON.parse(body)
+      var synapseId = body.data.id
       var mapping = {
         mappable_id: synapseId,
         mappable_type: 'Synapse',
         map_id: map
-      };
+      }
       request.post({
         url: mappingCreateUrl,
         form: {
@@ -227,27 +230,27 @@ var toExport = {
         }
       }, function (err, response, body) {
         if (err || response.statusCode > 200) {
-          console.log(err || 'statusCode: ' + response.statusCode);
-          console.log('body: ', body);
-          return callback('mapping failed', synapseId);
+          console.log(err || 'statusCode: ' + response.statusCode)
+          console.log('body: ', body)
+          return callback('mapping failed', synapseId)
         }
-        var body = JSON.parse(body);
-        callback(null, synapseId, body.data.id);
-      });
-    });
+        var body = JSON.parse(body)
+        callback(null, synapseId, body.data.id)
+      })
+    })
   },
   findTopicWithLink: function (link, token, callback) {
     request.get({
       url: topicsUrl + '?access_token=' + token + '&q=' + link
     }, function (err, response, body) {
       if (err || response.statusCode > 200) {
-        console.log(err || 'statusCode: ' + response.statusCode);
-        console.log('body: ', body);
-        return callback('fetching topic failed');
+        console.log(err || 'statusCode: ' + response.statusCode)
+        console.log('body: ', body)
+        return callback('fetching topic failed')
       }
-      var body = JSON.parse(body);
-      callback(null, body.data[0]);
-    });
+      var body = JSON.parse(body)
+      callback(null, body.data[0])
+    })
   },
   deleteMapping: function (id, token, callback) {
     request({
@@ -258,71 +261,71 @@ var toExport = {
       }
     }, function (err, response, body) {
       if (err || response.statusCode > 200) {
-        console.log(err || 'statusCode: ' + response.statusCode);
-        console.log('body: ', body);
-        return callback('deleting mapping failed');
+        console.log(err || 'statusCode: ' + response.statusCode)
+        console.log('body: ', body)
+        return callback('deleting mapping failed')
       }
-      callback(null);
-    });
+      callback(null)
+    })
   },
   getMap: function (id, token, callback) {
     request.get({
       url: mapUrl + id + '?access_token=' + token + '&embed=topics,synapses,mappings'
     }, function (err, response, body) {
       if (err || response.statusCode > 200) {
-        console.log(err || 'statusCode: ' + response.statusCode);
-        console.log('body: ', body);
-        return callback('fetching map failed');
+        console.log(err || 'statusCode: ' + response.statusCode)
+        console.log('body: ', body)
+        return callback('fetching map failed')
       }
-      var body = JSON.parse(body);
-      callback(null, body.data);
-    });
+      var body = JSON.parse(body)
+      callback(null, body.data)
+    })
   },
   getCurrentUser: function (token, callback) {
     request.get({
       url: `${usersUrl}/current?access_token=${token}`
     }, function (err, response, body) {
       if (err || response.statusCode > 200) {
-        console.log(err || `statusCode: ${response.statusCode}`);
-        console.log(`body: ${body}`);
-        return callback('fetching current user failed');
+        console.log(err || `statusCode: ${response.statusCode}`)
+        console.log(`body: ${body}`)
+        return callback('fetching current user failed')
       }
-      var body = JSON.parse(body);
-      callback(null, body.data);
-    });
+      var body = JSON.parse(body)
+      callback(null, body.data)
+    })
   },
   getMyMaps: function (userid, page, token, callback) {
     request.get({
       url: `${mapsUrl}?access_token=${token}&user_id=${userid}&page=${page}`
     }, function (err, response, body) {
       if (err || response.statusCode > 200) {
-        console.log(err || `statusCode: ${response.statusCode}`);
-        console.log(`body: ${body}`);
-        return callback('fetching my maps failed');
+        console.log(err || `statusCode: ${response.statusCode}`)
+        console.log(`body: ${body}`)
+        return callback('fetching my maps failed')
       }
-      var body = JSON.parse(body);
-      callback(null, body.data, body.page);
-    });
+      var body = JSON.parse(body)
+      callback(null, body.data, body.page)
+    })
   },
   getMyId: function (token, callback) {
     request.get({
       url: `${usersUrl}/current?access_token=${token}`
     }, function (err, response, body) {
       if (err || response.statusCode > 200) {
-        console.log(err || `statusCode: ${response.statusCode}`);
-        console.log(`body: ${body}`);
-        return callback('fetching me failed');
+        console.log(err || `statusCode: ${response.statusCode}`)
+        console.log(`body: ${body}`)
+        return callback('fetching me failed')
       }
-      var body = JSON.parse(body);
-      callback(null, body.data.id);
-    });
+      var body = JSON.parse(body)
+      callback(null, body.data.id)
+    })
   },
   createMap: function (name, token, callback) {
     var map = {
       name: name,
       permission: 'commons',
       arranged: true
-    };
+    }
     request.post({
       url: mapCreateUrl,
       form: {
@@ -331,18 +334,18 @@ var toExport = {
       }
     }, function (err, response, body) {
       if (err || response.statusCode > 200) {
-        console.log(err || 'statusCode: ' + response.statusCode);
-        console.log('body: ', body);
-        return callback('creating map failed');
+        console.log(err || 'statusCode: ' + response.statusCode)
+        console.log('body: ', body)
+        return callback('creating map failed')
       }
-      var body = JSON.parse(body);
-      callback(null, body.data.id);
-    });
+      var body = JSON.parse(body)
+      callback(null, body.data.id)
+    })
   },
   formatTopicsForDisplay: function (topics) {
     var string = ''
     topics.forEach(t => {
-      const metacode = toExport.findMetacodeByNameIdOrEmoji(t.metacode_id)
+      const metacode = module.exports.findMetacodeByNameIdOrEmoji(t.metacode_id)
       string += `:${metacode[2]}: `
       /*
       const mapID = ''
@@ -358,7 +361,7 @@ var toExport = {
   },
   formatMapsForDisplay: function (maps, pageData) {
     var mapList = maps.map(m => {
-      return `<${noApiRootUrl}/maps/${m.id}|${m.name}> (${m.id})\n`;
+      return `<${noApiRootUrl}/maps/${m.id}|${m.name}> (${m.id})\n`
     }).join('')
     var { current_page, total_pages } = pageData
     if (current_page < total_pages) {
@@ -367,19 +370,4 @@ var toExport = {
     }
     return mapList
   }
-}
-
-module.exports = function (METAMAPS_URL) {
-  noApiRootUrl = METAMAPS_URL;
-  rootUrl = METAMAPS_URL + '/api/v2';
-  topicCreateUrl = rootUrl + '/topics';
-  synapseCreateUrl = rootUrl + '/synapses';
-  mappingCreateUrl = rootUrl + '/mappings';
-  mappingDeleteUrl = rootUrl + '/mappings'; // + ID
-  mapCreateUrl = rootUrl + '/maps';
-  mapsUrl = rootUrl + '/maps';
-  topicsUrl = rootUrl + '/topics';
-  mapUrl = rootUrl + '/maps/'; // + ID
-  usersUrl = rootUrl + '/users';
-  return toExport;
 }

@@ -1,5 +1,4 @@
-module.exports = function(METAMAPS_URL) {
-var Metamaps = require('./metamaps.js')(METAMAPS_URL)
+var Metamaps = require('./metamaps.js')
 var RTM_EVENTS = require('@slack/client').RTM_EVENTS
 var projectMapId
 
@@ -72,7 +71,7 @@ function diffProjects(userProjects, allProjects, excludeProjects) {
   return diff
 }
 
-var toExport = {
+module.exports = {
   setProjectMapId: function (id) {
     projectMapId = id
   },
@@ -183,7 +182,7 @@ var toExport = {
         }
 
         function collectProjects() {
-          toExport.fetchProjects(tokens[userId], function (err, prjts, map) {
+          module.exports.fetchProjects(tokens[userId], function (err, prjts, map) {
             var otherProjects = diffProjects(projects, prjts, removedProjects) // projects not being worked on by the user
             if (!otherProjects.length) {
               return yesNoQstn('Since there\'s no other existing projects, would you like to add any that you\'re working on?',
@@ -239,7 +238,7 @@ var toExport = {
             return
           }
           person = personId
-          toExport.fetchProjectsForUser(name, tokens[userId], function (err, prjts) {
+          module.exports.fetchProjectsForUser(name, tokens[userId], function (err, prjts) {
             projects = prjts
             yesNoQstn('Hello there! Do you have some time to update me on which projects you\'re working on?', letsUpdate, letsNotUpdate)
           })
@@ -249,7 +248,7 @@ var toExport = {
   },
   displayAll: function (token, callback) {
     var list = nl('Here\'s all the projects and who\'s working on them:')
-    toExport.fetchProjects(token, function (err, projects, map) {
+    module.exports.fetchProjects(token, function (err, projects, map) {
       projects.forEach(function(p, index) {
         list += nl(bd(p.name))
         var people = map.synapses.filter(function(s) {
@@ -265,7 +264,7 @@ var toExport = {
   },
   displayForUser: function (name, token, callback) {
     var list = nl('Here\'s your projects and collaborators:')
-    toExport.fetchProjectsForUser(name, token, function (err, projects, map) {
+    module.exports.fetchProjectsForUser(name, token, function (err, projects, map) {
       projects.forEach(function(p, index) {
         list += nl(bd(p.name))
         var people = map.synapses.filter(function(s) {
@@ -312,6 +311,4 @@ var toExport = {
       callback(null, projects, map)
     })
   }
-}
-return toExport;
 }

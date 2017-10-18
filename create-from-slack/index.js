@@ -1,85 +1,69 @@
 const Promise = require('bluebird')
+const CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS
+const RtmClient = require('@slack/client').RtmClient
+const WebClient = require('@slack/client').WebClient
+const RTM_EVENTS = require('@slack/client').RTM_EVENTS
+const DataStore = require('@slack/client').MemoryDataStore
+const { setClientsForTeam } = require('./clientsForTeam.js')
+const { dmForUserId } = require('./clientHelpers.js')
+const commands = require('./commands.js')
 
-module.exports = function (team, setProjectMap, authUrl, METAMAPS_URL, persistChannelSetting) {
 
-  var CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
-  var RtmClient = require('@slack/client').RtmClient;
-  var WebClient = require('@slack/client').WebClient;
-  var RTM_EVENTS = require('@slack/client').RTM_EVENTS;
-  var DataStore = require('@slack/client').MemoryDataStore;
-  var dataStore = new DataStore();
-  const { accessToken, tokens, mmUserIds, botToken, botId, projectMapId } = team
-  var users = {};
-  var web = new WebClient(accessToken); // the "App" has different (greater) permissions than the bot
-  var webBot = new WebClient(botToken, {logLevel: 'info', dataStore: dataStore});
-  var rtm = new RtmClient(botToken, {logLevel: 'info', dataStore: dataStore});
-  rtm.start();
+function setup (team, setProjectMap, authUrl, persistChannelSetting) {
+  const { name, accessToken, tokens, mmUserIds, botToken, botId, projectMapId } = team
+  const users = {}
+  const dataStore = new DataStore()
+  // the "App" has different (greater) permissions than the bot
+  const webApp = new WebClient(accessToken)
+  const webBot = new WebClient(botToken, {logLevel: 'info', dataStore: dataStore})
+  const rtmBot = new RtmClient(botToken, {logLevel: 'info', dataStore: dataStore})
+  // so they can be accesible within other modules
+  setClientsForTeam(name, dataStore, webApp, webBot, rtmBot)
+  rtmBot.start()
 
-  function dmForUserId(userId) {
-    var channel = dataStore.getDMByName(dataStore.getUserById(userId).name)
-    if (channel) return Promise.resolve(channel.id)
-    return webBot.dm.open(userId).then(response => response.channel.id)
-  }
-
-  function userName(userId) {
-    var user = dataStore.getUserById(userId)
-    return user ? user.name : null
-  }
-
-  var SLACK = require('./commands.js')(
-    web,
-    webBot,
-    rtm,
-    tokens,
-    users,
-    botId,
-    METAMAPS_URL,
-    authUrl,
-    dmForUserId,
-    userName,
-    projectMapId,
-    setProjectMap,
+  const SLACK = commands(tokens, users, botId, authUrl, projectMapId, setProjectMap,
     team.channelSettings,
     persistChannelSetting,
-    team.name);
+    team.name)
 
   function verified(message) {
     if (!tokens[message.user]) {
-      var id = rtm.activeTeamId + message.user
+      var id = rtmBot.activeTeamId + message.user
       dmForUserId(message.user).then(dmId => {
-        rtm.sendMessage('You haven\'t authenticated yet, please go to ' + authUrl + '?id=' + id, dmId);
+        rtmBot.sendMessage('You haven\'t authenticated yet, please go to ' + authUrl + '?id=' + id, dmId)
       })
-      return false;
+      return false
     }
-    return true;
+    return true
   }
 
-  rtm.on(RTM_EVENTS.MESSAGE, function (message) {
-    if (!message.text) return;
+  rtmBot.on(RTM_EVENTS.MESSAGE, function (message) {
+    if (!message.text) return
 
-    var ran;
+    var ran
     SLACK.COMMANDS.forEach(function (command) {
       if (!ran &&
           message.text.slice(0, command.cmd.length).toLowerCase() === command.cmd.toLowerCase() &&
           command.check(message) &&
           (!command.requireUser || verified(message))) {
-        ran = true;
+        ran = true
         command.run(message)
       }
-    });
-  });
+    })
+  })
 
-  rtm.on(RTM_EVENTS.REACTION_ADDED, SLACK.REACTIONS);
+  rtmBot.on(RTM_EVENTS.REACTION_ADDED, SLACK.REACTIONS)
 
   return {
     addTokenForUser: function addTokenForUser(userId, token) {
-      tokens[userId] = token;
-      dmForUserId(userId).then(dmId => {
-        rtm.sendMessage('Nice! You are now authorized with metamaps.', dmId)
+      tokens[userId] = token
+      dmForUserId(webBot, dataStore, userId, dmId => {
+        rtmBot.sendMessage('Nice! You are now authorized with metamaps.', dmId)
       })
     },
     addMmUserId: function addMmUserId(mmUserId, userId) {
       mmUserIds[mmUserId] = userId
     }
   }
-} // end module.exports
+}
+module.exports.setup = setup

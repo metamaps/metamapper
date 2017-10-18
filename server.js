@@ -1,30 +1,33 @@
-if (process.env.NODE_ENV !== 'production') require('dotenv').config();
+if (process.env.NODE_ENV !== 'production') require('dotenv').config()
 var SLACK_CLIENT_ID = process.env.SLACK_CLIENT_ID
 var SLACK_CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET
 var METAMAPS_CLIENT_ID = process.env.METAMAPS_CLIENT_ID
 var METAMAPS_CLIENT_SECRET = process.env.METAMAPS_CLIENT_SECRET
-var express = require('express');
+var request = require('request')
+var mongoose = require('mongoose')
+var express = require('express')
 var bodyParser = require('body-parser')
-var app = express();
+var app = express()
 app.use(bodyParser.json())
-var authRoute = '/sign_in';
-var fullUrl = process.env.PROTOCOL + '://' + process.env.DOMAIN
-var authUrl = fullUrl + authRoute;
-var METAMAPS_URL = process.env.METAMAPS_URL;
-const mmApi = require('./create-from-slack/metamaps')(METAMAPS_URL)
-var metamapsSignInUrl = METAMAPS_URL + '/oauth/authorize';
-var metamapsTokenUrl = METAMAPS_URL + '/oauth/token';
-var metamapsOauthRoute = '/metamaps/confirm';
-var metamapsRedirectUri = fullUrl + metamapsOauthRoute;
-var slackTokenUrl = 'https://slack.com/api/oauth.access';
-var request = require('request');
-var mongoose = require('mongoose');
-var metamapBot = require('./create-from-slack');
-var bots = {}; // will store the bot instances that are running
-mongoose.connect(process.env.DB);
+var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
+var authRoute = '/sign_in'
+var fullUrl = process.env.PROTOCOL + '://' + process.env.DOMAIN
+var authUrl = fullUrl + authRoute
+var METAMAPS_URL = process.env.METAMAPS_URL
+const mmApi = require('./create-from-slack/metamaps')
+var metamapsSignInUrl = METAMAPS_URL + '/oauth/authorize'
+var metamapsTokenUrl = METAMAPS_URL + '/oauth/token'
+var metamapsOauthRoute = '/metamaps/confirm'
+var metamapsRedirectUri = fullUrl + metamapsOauthRoute
+var slackTokenUrl = 'https://slack.com/api/oauth.access'
+var metamapBot = require('./create-from-slack')
+const { handleInteractiveResponse } = require('./interactiveMessagesManager.js')
+var bots = {} // will store the bot instances that are running
+mongoose.connect(process.env.DB)
+
+var db = mongoose.connection
+db.on('error', console.error.bind(console, 'connection error:'))
 db.once('open', function() {
   // we're connected!
 
@@ -35,40 +38,40 @@ db.once('open', function() {
     bot_user_id: String,
     bot_access_token: String,
     project_map_id: String
-  });
+  })
   var Token = mongoose.model('Token', {
     access_token: String,
     key: String,
     mm_user_id: String,
     user_id: String,
     team_id: String
-  });
+  })
   var ChannelSetting = mongoose.model('ChannelSetting', {
     metacode_id: Number,
     map_id: String,
     capture: Boolean, // whether to capture every message or not
     channel_id: String,
     team_id: String
-  });
+  })
 
   // Initialize
   Team.find(function (err, teams) {
     if (err) {
-      console.log(err);
-      return;
+      console.log(err)
+      return
     }
     teams.forEach(function (team) {
       Token.find({ team_id: team.get('team_id') }, function (err, tokens) {
         if (err) {
-          console.log(err);
-          return;
+          console.log(err)
+          return
         }
         ChannelSetting.find({ team_id: team.get('team_id') }, function (err, channelSettings) {
           if (err) {
-            console.log(err);
-            return;
+            console.log(err)
+            return
           }
-          var userTokens = {};
+          var userTokens = {}
           const mmUserIds = {}
           tokens.forEach(t => {
             if (t.get('access_token')) {
@@ -77,10 +80,10 @@ db.once('open', function() {
             }
           })
           startBotForTeam(team, userTokens, mmUserIds, channelSettings)
-        });
-      });
-    });
-  });
+        })
+      })
+    })
+  })
 
   function startBotForTeam(team, tokens = {}, mmUserIds = {}, channelSettings = []) {
     const toPassIn = {
@@ -91,12 +94,12 @@ db.once('open', function() {
       projectMapId: team.get('project_map_id'),
       mmUserIds,
       tokens
-    };
+    }
 
     var persistProjectMap = function (projectMapId) {
       team.project_map_id = projectMapId
       team.save()
-    };
+    }
 
     toPassIn.channelSettings = {}
     channelSettings.forEach(function (cS) {
@@ -121,24 +124,24 @@ db.once('open', function() {
       channelSetting.save()
     }
 
-    bots[team.get('team_id')] = metamapBot(toPassIn, persistProjectMap, authUrl, METAMAPS_URL, persistChannelSetting); // returns the addTokenForUser function
+    bots[team.get('team_id')] = metamapBot.setup(toPassIn, persistProjectMap, authUrl, persistChannelSetting)
   }
 
   app.get('/', function (req, res) {
     var addToSlack = `<a href="https://slack.com/oauth/authorize?&client_id=${SLACK_CLIENT_ID}&redirect_uri=${fullUrl}/slack/confirm&scope=bot,commands,channels:history,channels:read,channels:write,chat:write:bot,emoji:read,groups:history,groups:read,groups:write,im:history,im:read,im:write,links:read,links:write,mpim:history,mpim:read,mpim:write,reactions:read,reactions:write,team:read,users:read"><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>`
-    res.send('metamapper! ' + addToSlack);
-  });
+    res.send('metamapper! ' + addToSlack)
+  })
 
   app.get(authRoute, function (req, res) {
-    var redirect = metamapsSignInUrl + '?client_id=' + METAMAPS_CLIENT_ID + '&response_type=code&redirect_uri=' + encodeURIComponent(metamapsRedirectUri + '?id=' + req.query.id);
-    res.redirect(redirect);
-  });
+    var redirect = metamapsSignInUrl + '?client_id=' + METAMAPS_CLIENT_ID + '&response_type=code&redirect_uri=' + encodeURIComponent(metamapsRedirectUri + '?id=' + req.query.id)
+    res.redirect(redirect)
+  })
   app.get(metamapsOauthRoute, function (req, res) {
-      var code = req.query.code;
-      var key = req.query.id;
-      var userId = key.substring(9);
-      var teamId = key.slice(0, 9);
-      var redirect_uri = process.env.PROTOCOL + '://' + process.env.DOMAIN + req.path + '?id=' + key;
+      var code = req.query.code
+      var key = req.query.id
+      var userId = key.substring(9)
+      var teamId = key.slice(0, 9)
+      var redirect_uri = process.env.PROTOCOL + '://' + process.env.DOMAIN + req.path + '?id=' + key
       var options = {
         uri: metamapsTokenUrl,
         form: {
@@ -148,23 +151,23 @@ db.once('open', function() {
           redirect_uri: redirect_uri,
           grant_type: 'authorization_code'
         }
-      };
+      }
       request.post(options, function (err, response, body) {
         if (err) {
-          console.log(err);
-          return; // redirect and show error
+          console.log(err)
+          return // redirect and show error
         }
-        body = JSON.parse(body);
-        if (!body.access_token) return res.send('There was an error');
+        body = JSON.parse(body)
+        if (!body.access_token) return res.send('There was an error')
         var token = new Token({
           access_token: body.access_token,
           key: key,
           user_id: userId,
           team_id: teamId
-        });
-        token.save();
+        })
+        token.save()
         bots[teamId].addTokenForUser(userId, body.access_token)
-        res.send('ok, you can now make use of metamapper authenticated as yourself!'); // do a redirect here
+        res.send('ok, you can now make use of metamapper authenticated as yourself!') // do a redirect here
         mmApi.getMyId(body.access_token, (err, id) => {
           if (err) {
             console.log('error fetching id for user')
@@ -174,9 +177,9 @@ db.once('open', function() {
           token.save()
           bots[teamId].addMmUserId(token.get('mm_user_id'), token.get('user_id'))
         })
-      });
+      })
 
-  });
+  })
 
   app.get('/slack/confirm', function (req, res) {
       var code = req.query.code
@@ -189,26 +192,33 @@ db.once('open', function() {
           code: code,
           redirect_uri: redirect_uri
         }
-      };
+      }
 
       request.post(options, function (err, response, body) {
         if (err) {
-          console.log(err);
-          return; // redirect and show error
+          console.log(err)
+          return // redirect and show error
         }
-        body = JSON.parse(body);
+        body = JSON.parse(body)
         var team = new Team({
           access_token: body.access_token,
           team_name: body.team_name,
           team_id: body.team_id,
           bot_user_id: body.bot.bot_user_id,
           bot_access_token: body.bot.bot_access_token
-        });
-        team.save();
-        startBotForTeam(team);
-        res.send('ok, the metamapper has been added for your team'); // do a redirect here
-      });
-  });
+        })
+        team.save()
+        startBotForTeam(team)
+        res.send('ok, the metamapper has been added for your team') // do a redirect here
+      })
+  })
+
+  app.post('/slack/interactive-messages', urlencodedParser, function (req, res) {
+    res.status(200).end()
+    // todo: check verification code
+    const payload = JSON.parse(req.body.payload)  // parse URL-encoded payload JSON string
+    handleInteractiveResponse(payload, res)
+  })
 
   app.post('/slack-special-endpoint-123', function (req, res) {
     /* Example slack data from nuzzel links
@@ -226,7 +236,7 @@ db.once('open', function() {
           image_height: 256,
           image_bytes: 13298,
           text: '<http://ncbi.nlm.nih.gov|ncbi.nlm.nih.gov> - Zhu H - Poor diet quality and insufficient nutrient intake is of particular co cern among older adults. The Older Americans Act of 1965 authorizes home-delivered meal services to homebound individuals aged 60 years and older. The purpose of this study was…',
-          pretext: 'Shared by 9 friends of <http://nuzzel.com/Bortseb|Robert Best>. View <http://nuzzel.com/story/03162017/ncbi.nlm.nih/impact_of_homedelivered_meal_programs_on_diet_and_nutrition_among?utm_campaign=alert&amp;utm_medium=slack&amp;utm_source=app&amp;e=226952|comments and more info> on <http://nuzzel.com|Nuzzel>',
+          pretext: 'Shared by 9 friends of <http://nuzzel.com/Bortseb|Robert Best>. View <http://nuzzel.com/story/03162017/ncbi.nlm.nih/impact_of_homedelivered_meal_programs_on_diet_and_nutrition_among?utm_campaign=alert&amputm_medium=slack&amputm_source=app&ampe=226952|comments and more info> on <http://nuzzel.com|Nuzzel>',
           id: 1 }
 
        ] ],
@@ -310,9 +320,9 @@ db.once('open', function() {
     }
 
 
-  });
+  })
 
   app.listen(process.env.PORT, function () {
-    console.log('Metamapper app listening on port ' + process.env.PORT);
-  });
-});
+    console.log('Metamapper app listening on port ' + process.env.PORT)
+  })
+})
