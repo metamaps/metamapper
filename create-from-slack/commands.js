@@ -423,11 +423,22 @@ module.exports = function (
           dataStore,
           webBot: web,
           tokens,
-          mapId,
-          facilitatorId: message.user
+          mapId
         }
-        opinionPoll(context, function (err, responses) {
-          console.log(err, responses)
+          // only get the list of topics once, add it to context
+        Metamaps.getMap(mapId, tokens[message.user], function (err, map) {
+          if (err) {
+            rtm.sendMessage('There was an error fetching the map', message.channel)
+            return
+          }
+          context.topics = map.topics
+          opinionPoll(context, function (err, responses) {
+            if (err) {
+              rtm.sendMessage('There was an error fetching the map', message.channel)
+              return
+            }
+            rtm.sendMessage(JSON.stringify(responses), message.channel)
+          })
         })
       }
     },

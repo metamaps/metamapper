@@ -1,4 +1,5 @@
 var Metamaps = require('./metamaps.js')
+const { dmForUserId, userNameForUserId } = require('./clientHelpers.js')
 var RTM_EVENTS = require('@slack/client').RTM_EVENTS
 var projectMapId
 
@@ -75,15 +76,16 @@ module.exports = {
   setProjectMapId: function (id) {
     projectMapId = id
   },
-  getUpdates: function (rtm, tokens, dmForUserId, userName) {
+  getUpdates: function (context) {
+    const { rtmBot, tokens } = context
     // contact each person who has signed in with Metamaps to see what projects they're working on
     //each user is going to have a Person node on the map, whose name correlates with their user name
     Object.keys(tokens).forEach(function (userId) {
       // look for a node on the map with the user name of the user
       // if there isn't one, create it, if there is one, use that
       // talk to that person to figure out what they're working on
-      dmForUserId(userId).then(dm => {
-        var name = userName(userId)
+      dmForUserId(context, userId, dm => {
+        var name = userNameForUserId(context, userId)
         var removedProjects = []
         var projects = []
         var person
@@ -130,12 +132,12 @@ module.exports = {
         }
 
         function send(text) {
-          rtm.sendMessage(text, dm)
+          rtmBot.sendMessage(text, dm)
         }
 
         function yesNoQstn(question, yes, no, dontMessage) {
           if (!dontMessage) send(question + ins())
-          rtm.once(RTM_EVENTS.MESSAGE, function (message) {
+          rtmBot.once(RTM_EVENTS.MESSAGE, function (message) {
             if (message.channel !== dm) {
               yesNoQstn(question, yes, no, true)
               return
@@ -152,7 +154,7 @@ module.exports = {
         }
 
         function actionTillDone(action, done) {
-          rtm.once(RTM_EVENTS.MESSAGE, function (message) {
+          rtmBot.once(RTM_EVENTS.MESSAGE, function (message) {
             if (message.channel !== dm) {
               actionTillDone(action, done)
               return

@@ -25,14 +25,15 @@ function interactiveResponse (context, dm, config, cb) {
   const { text, options } = config
   const callback_id = uuid()
   const toAttach = buttonAttachments(text, options, callback_id)
-  webBot.chat.postMessage(dm, text, toAttach, function (err, response) {
+  webBot.chat.postMessage(dm, "", toAttach, function (err, response) {
     if (err) {
       cb(err)
       return
     }
     interactiveMessageCallbacks[callback_id] = {
       cb,
-      text
+      text,
+      options
     }
   })
 }
@@ -54,18 +55,11 @@ function handleInteractiveResponse (payload, res) {
   if (!interactiveMessage) return
 
   const value = actions[0].value
-  let updated
-  // todo: move this to a config option like 'replaceWith'
-  if (value === "1") {
-    updated = ":white_check_mark: You agreed"
-  } else if (value === "-1") {
-    updated = ":x: You disagreed"
-  } else if (value ==="0") {
-    updated = ":wave: You passed"
-  }
+  let replacement = interactiveMessage.options.find(function (o) {
+    return o.value === value
+  }).replaceWith
   var message = {
-      "text": interactiveMessage.text,
-      "attachments": attachment(updated),
+      "attachments": attachment(interactiveMessage.text + '\n' + replacement),
       "replace_original": true
   }
   sendMessageToSlackResponseURL(payload.response_url, message)
@@ -89,6 +83,7 @@ function buttonAttachments (text, options = [], callback_id) {
   return {
     "attachments": [
       {
+        "text": text,
         "fallback": "You are unable to offer your opinion",
         "callback_id": callback_id,
         "color": "#3AA3E3",

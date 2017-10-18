@@ -29,7 +29,11 @@ function setup (team, setProjectMap, authUrl, persistChannelSetting) {
   function verified(message) {
     if (!tokens[message.user]) {
       var id = rtmBot.activeTeamId + message.user
-      dmForUserId(message.user).then(dmId => {
+      const context = {
+        dataStore,
+        webBot
+      }
+      dmForUserId(context, message.user, dmId => {
         rtmBot.sendMessage('You haven\'t authenticated yet, please go to ' + authUrl + '?id=' + id, dmId)
       })
       return false
@@ -57,7 +61,11 @@ function setup (team, setProjectMap, authUrl, persistChannelSetting) {
   return {
     addTokenForUser: function addTokenForUser(userId, token) {
       tokens[userId] = token
-      dmForUserId(webBot, dataStore, userId, dmId => {
+      const context = {
+        dataStore,
+        webBot
+      }
+      dmForUserId(context, userId, dmId => {
         rtmBot.sendMessage('Nice! You are now authorized with metamaps.', dmId)
       })
     },
