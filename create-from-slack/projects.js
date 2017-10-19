@@ -1,5 +1,5 @@
-module.exports = function(METAMAPS_URL) {
-var Metamaps = require('./metamaps.js')(METAMAPS_URL)
+var Metamaps = require('./metamaps.js')
+const { dmForUserId, userNameForUserId } = require('./clientHelpers.js')
 var RTM_EVENTS = require('@slack/client').RTM_EVENTS
 var projectMapId
 
@@ -72,19 +72,20 @@ function diffProjects(userProjects, allProjects, excludeProjects) {
   return diff
 }
 
-var toExport = {
+module.exports = {
   setProjectMapId: function (id) {
     projectMapId = id
   },
-  getUpdates: function (rtm, tokens, dmForUserId, userName) {
+  getUpdates: function (context) {
+    const { rtmBot, tokens } = context
     // contact each person who has signed in with Metamaps to see what projects they're working on
     //each user is going to have a Person node on the map, whose name correlates with their user name
     Object.keys(tokens).forEach(function (userId) {
       // look for a node on the map with the user name of the user
       // if there isn't one, create it, if there is one, use that
       // talk to that person to figure out what they're working on
-      dmForUserId(userId).then(dm => {
-        var name = userName(userId)
+      dmForUserId(context, userId, dm => {
+        var name = userNameForUserId(context, userId)
         var removedProjects = []
         var projects = []
         var person
@@ -131,12 +132,12 @@ var toExport = {
         }
 
         function send(text) {
-          rtm.sendMessage(text, dm)
+          rtmBot.sendMessage(text, dm)
         }
 
         function yesNoQstn(question, yes, no, dontMessage) {
           if (!dontMessage) send(question + ins())
-          rtm.once(RTM_EVENTS.MESSAGE, function (message) {
+          rtmBot.once(RTM_EVENTS.MESSAGE, function (message) {
             if (message.channel !== dm) {
               yesNoQstn(question, yes, no, true)
               return
@@ -153,7 +154,7 @@ var toExport = {
         }
 
         function actionTillDone(action, done) {
-          rtm.once(RTM_EVENTS.MESSAGE, function (message) {
+          rtmBot.once(RTM_EVENTS.MESSAGE, function (message) {
             if (message.channel !== dm) {
               actionTillDone(action, done)
               return
@@ -183,7 +184,7 @@ var toExport = {
         }
 
         function collectProjects() {
-          toExport.fetchProjects(tokens[userId], function (err, prjts, map) {
+          module.exports.fetchProjects(tokens[userId], function (err, prjts, map) {
             var otherProjects = diffProjects(projects, prjts, removedProjects) // projects not being worked on by the user
             if (!otherProjects.length) {
               return yesNoQstn('Since there\'s no other existing projects, would you like to add any that you\'re working on?',
@@ -239,7 +240,7 @@ var toExport = {
             return
           }
           person = personId
-          toExport.fetchProjectsForUser(name, tokens[userId], function (err, prjts) {
+          module.exports.fetchProjectsForUser(name, tokens[userId], function (err, prjts) {
             projects = prjts
             yesNoQstn('Hello there! Do you have some time to update me on which projects you\'re working on?', letsUpdate, letsNotUpdate)
           })
@@ -249,7 +250,7 @@ var toExport = {
   },
   displayAll: function (token, callback) {
     var list = nl('Here\'s all the projects and who\'s working on them:')
-    toExport.fetchProjects(token, function (err, projects, map) {
+    module.exports.fetchProjects(token, function (err, projects, map) {
       projects.forEach(function(p, index) {
         list += nl(bd(p.name))
         var people = map.synapses.filter(function(s) {
@@ -265,7 +266,7 @@ var toExport = {
   },
   displayForUser: function (name, token, callback) {
     var list = nl('Here\'s your projects and collaborators:')
-    toExport.fetchProjectsForUser(name, token, function (err, projects, map) {
+    module.exports.fetchProjectsForUser(name, token, function (err, projects, map) {
       projects.forEach(function(p, index) {
         list += nl(bd(p.name))
         var people = map.synapses.filter(function(s) {
@@ -312,6 +313,4 @@ var toExport = {
       callback(null, projects, map)
     })
   }
-}
-return toExport;
 }
