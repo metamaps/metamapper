@@ -5,6 +5,7 @@ const { getClientsForTeam } = require('./clientsForTeam')
 var Metamaps = require('./metamaps.js')
 var projects = require('./projects.js')
 var opinionPoll = require('./opinion-poll.js').main
+const collectParticipants = require('./collectParticipants.js')
 
 module.exports = function (
   tokens,
@@ -425,10 +426,8 @@ module.exports = function (
           rtmBot: rtm,
           tokens,
           mapId,
-          who: message.user
+          channel: message.channel
         }
-        rtm.sendMessage('Beginning an opinion poll of map ' + mapId + '.', message.channel)
-        rtm.sendMessage('Results will be posted here when everyone has completed it.', message.channel)
           // only get the list of topics once, add it to context
         Metamaps.getMap(mapId, tokens[message.user], function (err, map) {
           if (err) {
@@ -436,13 +435,19 @@ module.exports = function (
             return
           }
           context.topics = map.topics
-          opinionPoll(context, function (err, responses) {
+          collectParticipants(context, function (err, participantIds) {
             if (err) {
-              rtm.sendMessage('There was an error fetching the map', message.channel)
+              rtm.sendMessage('There was an error collecting the participants', message.channel)
               return
             }
-            const output = 'Here are the responses: \n' + JSON.stringify(responses)
-            rtm.sendMessage(output, message.channel)
+            context.participantIds = participantIds
+            opinionPoll(context, function (err, responses) {
+              if (err) {
+                rtm.sendMessage('There was an error during the opinion poll', message.channel)
+                return
+              }
+              // do nothing, its done
+            })
           })
         })
       }
