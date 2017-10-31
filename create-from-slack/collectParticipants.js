@@ -3,7 +3,7 @@ const interactionText = require('./interactionText.js')
 
 function collectParticipants (context, cb) {
   const { rtmBot, channel } = context
-  rtmBot.sendMessage(interactionText('en.collectParticipants.explain'), channel)
+  rtmBot.sendMessage(interactionText('en.session.collectParticipants.explain'), channel)
   rtmBot.once(RTM_EVENTS.MESSAGE, function (message) {
     const pattern = new RegExp(/<@(.*?)>/g)
     const participantIds = []
@@ -12,7 +12,7 @@ function collectParticipants (context, cb) {
       participantIds.push(match[1])
     }
     if (!participantIds.length) {
-      rtmBot.sendMessage(interactionText('en.collectParticipants.tryAgain'), channel)
+      rtmBot.sendMessage(interactionText('en.session.collectParticipants.tryAgain'), channel)
       collectParticipants(context, cb)
       return
     }
