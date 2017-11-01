@@ -1,5 +1,6 @@
 const { apply, parallel, series, waterfall } = require('async')
 const RTM_EVENTS = require('@slack/client').RTM_EVENTS
+const { interactiveResponse } = require('../interactiveMessagesManager.js')
 const iT = require('./interactionText.js')
 const Metamaps = require('./metamaps.js')
 const { dmForUserId } = require('./clientHelpers.js')
@@ -10,7 +11,7 @@ const processes = {
 
 function listenInChannel (rtmBot, channel, cb) {
   rtmBot.once(RTM_EVENTS.MESSAGE, function (message) {
-    if (message.channel === channel) {
+    if (message.text && message.channel === channel && message.user !== rtmBot.activeUserId) {
       cb(null, message)
     } else {
       listenInChannel(rtmBot, channel, cb)
@@ -80,25 +81,67 @@ function collectChannel (context, cb) {
 module.exports.collectChannel = collectChannel
 
 
+
+// collectMap helper
+const NEW_MAP_FLAG = 'new-map'
+function getDefaultMapIfSet (mapId, token, cb) {
+  if (mapId) {
+    Metamaps.getMap(mapId, token, cb)
+  } else {
+    cb()
+  }
+}
+// collectMap helper
+function collectMapResponse (context, facilitatorDM, map, cb) {
+  // the ultimate goal here is to get a map ID back from the user as a value
+  // create an interactiveMessage with the default map as an option
+  // TODO: add keyboard input option
+  const defaultOption = map ? { text: 'Use Channel Map', value: map.id.toString(), replaceWith: 'Selected Channel Map' } : {}
+  const newMapOption = { text: 'New Map with Session Title', value: NEW_MAP_FLAG, replaceWith: 'Opted to Create New Map' }
+  const interactiveConfig = {
+    outerText: iT('en.session.collectMap.explain'),
+    text: map ? `The map set for that channel is ${map.name}` : '',
+    options: map ? [defaultOption, newMapOption] : [newMapOption]
+  }
+  interactiveResponse(context, facilitatorDM, interactiveConfig, cb)
+}
 function collectMap (context, cb) {
-  const { rtmBot, facilitatorDM, tokens, user } = context
-  rtmBot.sendMessage(iT('en.session.collectMap'), facilitatorDM)
-  listenInChannel(rtmBot, facilitatorDM, function (err, message) {
+  const { mapId, rtmBot, facilitatorDM, tokens, user } = context
+
+  function complete (map) {
+    const msg = iT('en.session.collectMap.acknowledgeMap', { mapName: map.name })
+    rtmBot.sendMessage(msg, facilitatorDM)
+    cb(null, map)
+  }
+
+  getDefaultMapIfSet(mapId, tokens[user], function (err, map) {
     if (err) {
-      cb(err)
-      return
+      rtmBot.sendMessage('There was an error trying to fetch the default map', facilitatorDM)
     }
-    //
-    // TODO: validate it?
-    // TODO: use the InteractiveMessage
-    // TODO: also allow automated creation of map
-    Metamaps.getMap(message.text, tokens[user], function (err, map) {
-      if (err) {
-        // TODO: do what?
+    collectMapResponse(context, facilitatorDM, map, function (err2, selectedMapId) {
+      if (err2) {
+        rtmBot.sendMessage('There was an error trying to select a map', facilitatorDM)
+        // TODO: what?
       }
-      const msg = iT('en.session.collectMapAcknowledge', { mapName: map.name })
-      rtmBot.sendMessage(msg, facilitatorDM)
-      cb(null, map)
+      if (selectedMapId === NEW_MAP_FLAG) {
+        rtmBot.sendMessage(iT('en.session.collectMap.willCreate'), facilitatorDM)
+        // special case, call back with just 'new-map' for map value
+        // it will be created later in the flow with session title and description
+        cb(null, selectedMapId)
+      } else if (selectedMapId === mapId) {
+        // we already have the map
+        complete(map)
+      } else {
+        // we need to fetch the map
+        Metamaps.getMap(selectedMapId, tokens[user], function (err, map) {
+          if (err) {
+            rtmBot.sendMessage('There was an error trying to fetch the selected map', facilitatorDM)
+            cb(err)
+            return
+          }
+          complete(map)
+        })
+      }
     })
   })
 }
@@ -145,7 +188,7 @@ module.exports.collectParticipants = collectParticipants
 
 
 function configureSession (context, facilitatorDM, cb) {
-  const { channel, dataStore, process, rtmBot, sessionType, user } = context
+  const { rtmBot, tokens, sessionType, user } = context
   const config = {
     sessionType,
     facilitator: user,
@@ -165,7 +208,23 @@ function configureSession (context, facilitatorDM, cb) {
       cb(err)
       return
     }
-    cb(null, Object.assign({}, config, result))
+    if (result.linkedMap === NEW_MAP_FLAG) {
+      const newMap = {
+        name: result.title,
+        desc: result.description
+      }
+      Metamaps.createMap(newMap, tokens[user], function (err, map) {
+        if (err) {
+          rtmBot.sendMessage('There was an error creating the map for the session', facilitatorDM)
+          cb(err)
+          return
+        }
+        result.linkedMap = map
+        cb(null, Object.assign({}, config, result))
+      })
+    } else {
+      cb(null, Object.assign({}, config, result))
+    }
   })
 }
 module.exports.configureSession = configureSession
@@ -254,7 +313,6 @@ module.exports.runSession = runSession
 
 function run (context, cb) {
   const { channel, dataStore, rtmBot, sessionType, user } = context
-
   const channelIsh = dataStore.getChannelGroupOrDMById(channel)
   // if not a one-on-one DM, move to one-on-one DM with that user for config
   if (channelIsh._modelName !== 'DM') {

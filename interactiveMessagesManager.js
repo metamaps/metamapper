@@ -20,19 +20,20 @@ function sendMessageToSlackResponseURL(responseURL, JSONmessage){
 }
 module.exports.sendMessageToSlackResponseURL = sendMessageToSlackResponseURL
 
-function interactiveResponse (context, dm, config, cb) {
+function interactiveResponse (context, channel, config, cb) {
   const { webBot } = context
   const { text, options } = config
   const outerText = config.outerText || ""
   const callback_id = uuid()
   const toAttach = buttonAttachments(text, options, callback_id)
-  webBot.chat.postMessage(dm, outerText, toAttach, function (err, response) {
+  webBot.chat.postMessage(channel, outerText, toAttach, function (err, response) {
     if (err) {
       cb(err)
       return
     }
     interactiveMessageCallbacks[callback_id] = {
       cb,
+      outerText,
       text,
       options
     }
@@ -60,11 +61,13 @@ function handleInteractiveResponse (payload, res) {
     return o.value === value
   }).replaceWith
   var message = {
+      "text": interactiveMessage.outerText,
       "attachments": attachment(interactiveMessage.text + '\n' + replacement),
       "replace_original": true
   }
   sendMessageToSlackResponseURL(payload.response_url, message)
   interactiveMessage.cb(null, value)
+  delete interactiveMessageCallbacks[callback_id]
 }
 module.exports.handleInteractiveResponse = handleInteractiveResponse
 

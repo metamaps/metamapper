@@ -24,8 +24,11 @@ Let’s start.`,
         explain: 'What channel should the session be linked to? Type the `#` symbol and channels will autocomplete.',
         tryAgain: 'That\'s not a valid channel, try again.'
       },
-      collectMap: 'What map should the session be linked to?',
-      collectMapAcknowledge: `Ok. Session is linked to map ${v.mapName}.`,
+      collectMap: {
+        explain: 'What map should the session be linked to?',
+        willCreate: 'Ok. That map will be created.',
+        acknowledgeMap: `Ok. Session is linked to map ${v.mapName}.`
+      },
       collectParticipants: {
         explain: 'Use the @ symbol to mention the people to include in the session.',
         tryAgain: 'You didn\'t mention anyone to include. Try again.'

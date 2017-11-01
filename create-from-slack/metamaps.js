@@ -320,10 +320,11 @@ module.exports = {
       callback(null, body.data.id)
     })
   },
-  createMap: function (name, token, callback) {
-    var map = {
-      name: name,
-      permission: 'commons',
+  createMap: function (map, token, callback) {
+    map = {
+      name: map.name,
+      desc: map.desc || '',
+      permission: map.permission || 'commons',
       arranged: true
     }
     request.post({
@@ -339,7 +340,7 @@ module.exports = {
         return callback('creating map failed')
       }
       var body = JSON.parse(body)
-      callback(null, body.data.id)
+      callback(null, body)
     })
   },
   formatTopicsForDisplay: function (topics) {
