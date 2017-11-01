@@ -2,10 +2,9 @@ if (process.env.NODE_ENV !== 'production') require('dotenv').config()
 const Promise = require('bluebird')
 const METAMAPS_URL = process.env.METAMAPS_URL
 const { getClientsForTeam } = require('./clientsForTeam')
-var Metamaps = require('./metamaps.js')
-var projects = require('./projects.js')
-var opinionPoll = require('./opinion-poll.js').main
-const collectParticipants = require('./collectParticipants.js')
+const Metamaps = require('./metamaps.js')
+const session = require('./session.js')
+const projects = require('./projects.js')
 
 module.exports = function (
   tokens,
@@ -410,12 +409,13 @@ module.exports = function (
       }
     },
     {
-      cmd: "opinion poll",
-      variable: "",
+      cmd: "start ",
+      variable: "[SESSION_TYPE]",
       inHelpList: true,
-      helpText: "get everyone to vote indepedently on the topics in the map",
+      helpText: "TODO: write this",
       requireUser: true,
       check: function (message) {
+        // TODO: check that it's a valid session type
         return true
       },
       run: function (message) {
@@ -426,30 +426,11 @@ module.exports = function (
           rtmBot: rtm,
           tokens,
           mapId,
+          sessionType: message.text.substring(6).trim(),
+          user: message.user,
           channel: message.channel
         }
-          // only get the list of topics once, add it to context
-        Metamaps.getMap(mapId, tokens[message.user], function (err, map) {
-          if (err) {
-            rtm.sendMessage('There was an error fetching the map', message.channel)
-            return
-          }
-          context.topics = map.topics
-          collectParticipants(context, function (err, participantIds) {
-            if (err) {
-              rtm.sendMessage('There was an error collecting the participants', message.channel)
-              return
-            }
-            context.participantIds = participantIds
-            opinionPoll(context, function (err, responses) {
-              if (err) {
-                rtm.sendMessage('There was an error during the opinion poll', message.channel)
-                return
-              }
-              // do nothing, its done
-            })
-          })
-        })
+        session.run(context, function () {})
       }
     },
     {
