@@ -4,6 +4,11 @@ module.exports = function (path, variables) {
 const v = variables || {}
 const interactionText = {
   en: {
+    signedIn: {
+      notSignedIn: 'Nope. You\'re not signed in to metamaps.',
+      moveToDM: 'Moving to a DM to sign you in.',
+      signIn: `Click here to sign in to metamaps: ${v.signInUrl}?id=${v.id}`
+    },
     session: {
       moveToDM: 'Ok. Moving to a DM to set it up.',
       facilitatorOverview: `There are {4 + # of process specific steps} steps to setting up a session.

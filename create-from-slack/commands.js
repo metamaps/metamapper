@@ -1,7 +1,9 @@
 if (process.env.NODE_ENV !== 'production') require('dotenv').config()
 const Promise = require('bluebird')
 const METAMAPS_URL = process.env.METAMAPS_URL
+const { dmForUserId } = require('./clientHelpers.js')
 const { getClientsForTeam } = require('./clientsForTeam')
+const iT = require('./interactionText.js')
 const Metamaps = require('./metamaps.js')
 const session = require('./session.js')
 const projects = require('./projects.js')
@@ -225,7 +227,7 @@ module.exports = function (
       cmd: "signed in?",
       variable: "",
       inHelpList: true,
-      helpText: "check whether you're account is connected to your metamaps account",
+      helpText: "check whether your account is connected to your metamaps account",
       requireUser: false,
       check: function (message) {
         return true
@@ -234,8 +236,27 @@ module.exports = function (
         if (tokens[message.user]) {
           rtm.sendMessage('Yes, you\'re signed in to metamaps.', message.channel)
         } else {
-          var id = rtm.activeTeamId + message.user
-          rtm.sendMessage('Nope. You\'re not signed in to metamaps. Click here to sign in: ' + signInUrl + '?id=' + id, message.channel)
+          rtm.sendMessage(iT('en.signedIn.notSignedIn'), message.channel)
+          const channelIsh = dataStore.getChannelGroupOrDMById(message.channel)
+          // if not a one-on-one DM, move to one-on-one DM with that user for signing in
+          if (channelIsh._modelName !== 'DM') {
+            rtm.sendMessage(iT('en.signedIn.moveToDM'), message.channel)
+          }
+          const context = {
+            dataStore,
+            webBot: web
+          }
+          dmForUserId(context, message.user, function (err, dm) {
+            if (err) {
+              rtm.sendMessage('There was an error messaging you in a DM', message.channel)
+              return
+            }
+            const iTvars = {
+              signInUrl,
+              id: rtm.activeTeamId + message.user
+            }
+            rtm.sendMessage(iT('en.signedIn.signIn', iTvars), dm)
+          })
         }
       }
     },
