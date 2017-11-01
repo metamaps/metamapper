@@ -227,7 +227,7 @@ function closeSession (context, configuration, result, cb) {
   const { process, rtmBot } = context
   const { facilitatorDM, linkedChannel } = configuration
   const linkedChannelId = linkedChannel.id
-  rtmBot.sendMessage('closing session', facilitatorDM)
+  rtmBot.sendMessage('session closed', facilitatorDM)
   process.formatResults(result, function (err, formatted) {
     if (err) {
       cb(err)

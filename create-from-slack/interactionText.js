@@ -25,11 +25,12 @@ Let’s start.`,
       facilitatorSessionStarting: `The session is beginning. You will be updated here with information about how people are participating, and be able to guide the process. You can:
 - make announcements to all participants by typing “announce: “ followed by your message
 - close the session at any point by typing “close session” and collect the results so far`,
+      // TODO: list participants, or number of participants
       channelSessionStarting: `There is an ${v.sessionType} session on *${v.title}* beginning.
 Results will be posted back here when the process is complete.`,
       participantSessionStarting: `You've been invited to an ${v.sessionType} session by <@${v.facilitator}>.
-They'll guide the process and be able to communicate messages to you throughout. The subject for this session is:\n${v.title}`,
-      participantSessionDescription: `Here is the context you need:\n${v.description}`
+They'll guide the process and be able to communicate messages to you throughout. The subject for this session is:\n*${v.title}*`,
+      participantSessionDescription: `Here is the context you need:\n*${v.description}*`
     },
     opinionPoll: {
       // todo: make this based on poll parameters
