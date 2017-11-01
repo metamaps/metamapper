@@ -118,24 +118,28 @@ function collectParticipants (context, cb) {
   // possibly being included in the participants
   const { rtmBot, facilitatorDM } = context
   rtmBot.sendMessage(iT('en.session.collectParticipants.explain'), facilitatorDM)
-  listenInChannel(rtmBot, facilitatorDM, function (err, message) {
-    if (err) {
-      cb(err)
-      return
-    }
-    const pattern = new RegExp(/<@(.*?)>/g)
-    const participantIds = []
-    var match = null;
-    while (match = pattern.exec(message.text)) {
-      participantIds.push(match[1])
-    }
-    if (!participantIds.length) {
-      rtmBot.sendMessage(iT('en.session.collectParticipants.tryAgain'), facilitatorDM)
-      collectParticipants(context, cb)
-      return
-    }
-    cb(null, participantIds)
-  })
+  // loop without re-explaining
+  function collect () {
+    listenInChannel(rtmBot, facilitatorDM, function (err, message) {
+      if (err) {
+        cb(err)
+        return
+      }
+      const pattern = new RegExp(/<@(.*?)>/g)
+      const participantIds = []
+      var match = null;
+      while (match = pattern.exec(message.text)) {
+        participantIds.push(match[1])
+      }
+      if (!participantIds.length) {
+        rtmBot.sendMessage(iT('en.session.collectParticipants.tryAgain'), facilitatorDM)
+        collect()
+        return
+      }
+      cb(null, participantIds)
+    })
+  }
+  collect()
 }
 module.exports.collectParticipants = collectParticipants
 
