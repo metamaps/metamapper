@@ -38,15 +38,6 @@ function collectResponseForTopic (context, total, userId, memo, topic, cb) {
 module.exports.collectResponseForTopic = collectResponseForTopic
 
 
-function collectResponsesForUser (context, topics, userId, cb) {
-  const { dmIds, rtmBot } = context
-
-
-
-}
-module.exports.collectResponsesForUser = collectResponsesForUser
-
-
 function main (context, configuration, cb) {
   const { rtmBot, dmIds } = context
   const { linkedMap: { topics }, participantIds } = configuration
