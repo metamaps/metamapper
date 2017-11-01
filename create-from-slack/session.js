@@ -27,7 +27,7 @@ function collectTitle (context, cb) {
       cb(err)
       return
     }
-    // TODO: validate it?
+    // TODO: validate maximum length?
     cb(null, message.text)
   })
 }
@@ -51,24 +51,31 @@ module.exports.collectDescription = collectDescription
 
 function collectChannel (context, cb) {
   const { rtmBot, facilitatorDM } = context
-  rtmBot.sendMessage(iT('en.session.collectChannel'), facilitatorDM)
-  listenInChannel(rtmBot, facilitatorDM, function (err, message) {
-    if (err) {
-      cb(err)
-      return
-    }
-    // TODO: validate it?
-    const idPattern = new RegExp(/<#(.*?)\|/)
-    const id = idPattern.exec(message.text)[1]
-    const namePattern = new RegExp(/\|(.*?)>/)
-    const name = namePattern.exec(message.text)[1]
-    const result = {
-      message: message.text,
-      id,
-      name
-    }
-    cb(null, result)
-  })
+  rtmBot.sendMessage(iT('en.session.collectChannel.explain'), facilitatorDM)
+  function collect () {
+    listenInChannel(rtmBot, facilitatorDM, function (err, message) {
+      if (err) {
+        cb(err)
+        return
+      }
+      const idMatch = new RegExp(/<#(.*?)\|/).exec(message.text)
+      const id = idMatch && idMatch[1]
+      const nameMatch = new RegExp(/\|(.*?)>/).exec(message.text)
+      const name = nameMatch && nameMatch[1]
+      const result = {
+        message: message.text,
+        id,
+        name
+      }
+      if (!result.id) {
+        rtmBot.sendMessage(iT('en.session.collectChannel.tryAgain'), facilitatorDM)
+        collect()
+        return
+      }
+      cb(null, result)
+    })
+  }
+  collect()
 }
 module.exports.collectChannel = collectChannel
 

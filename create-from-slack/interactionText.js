@@ -15,8 +15,11 @@ const interactionText = {
 Let’s start.`,
       collectTitle: 'What concise title could you give to broadly define your session?',
       collectDescription: 'Now, you need to offer participants any background and context they might need to participate well in the session. Write an introductory paragraph for this which they will see.',
-      collectChannel: 'Great. What channel should the session be linked to?',
-      collectMap: 'Ok. What map should the session be linked to?',
+      collectChannel: {
+        explain: 'What channel should the session be linked to? Type the `#` symbol and channels will autocomplete.',
+        tryAgain: 'That\'s not a valid channel, try again.'
+      },
+      collectMap: 'What map should the session be linked to?',
       collectMapAcknowledge: `Ok. Session is linked to map ${v.mapName}.`,
       collectParticipants: {
         explain: 'Use the @ symbol to mention the people to include in the session.',
