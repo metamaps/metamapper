@@ -436,15 +436,13 @@ module.exports = function (
     {
       cmd: 'help',
       variable: "",
-      inHelpList: true,
-      ambiguous: 'Do you mean me?',
-      helpText: "list all the instructions that I understand",
+      inHelpList: false,
       requireUser: false,
       check: function (message) {
         return true
       },
       run: function (message) {
-        var help = 'Excellent, that\'s something I can do! Here\'s what else I can do:\n'
+        var help = 'Here\'s how to use metamapper:\n'
         COMMANDS.forEach(function (command) {
           if (command.inHelpList) help += '*' + command.cmd + command.variable + '* ' + command.helpText + '\n'
         })
