@@ -71,7 +71,31 @@ module.exports.main = main
 
 
 function formatResults (results, cb) {
-  const iTvars = { responses: JSON.stringify(results) }
-  cb(null, interactionText('en.opinionPoll.channelResponseSummary', iTvars))
+
+  results = results.reduce(function (memo, user) {
+    user.opinions.forEach(function (o) {
+      memo[o.id] = memo[o.id] || {text: o.text, values: {}}
+      memo[o.id].values[user.userId] = o.opinion
+    })
+    return memo
+  }, {})
+
+  const formatted = Object.keys(results).map(function (topicKey) {
+    const topic = results[topicKey]
+    let string = topic.text + '\n'
+    Object.keys(topic.values).forEach(function (userId) {
+      const opinion = topic.values[userId]
+      string += '  '
+      if (opinion === '1') {
+        string += `:white_check_mark: <@${userId}> agreed`
+      } else if (opinion === '-1') {
+        string += `:x: <@${userId}> disagreed`
+      } else if (opinion === '0') {
+        string += `:wave: <@${userId}> passed`
+      }
+    })
+    return string
+  }).join('\n')
+  cb(null, formatted)
 }
 module.exports.formatResults = formatResults

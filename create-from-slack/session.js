@@ -1,5 +1,6 @@
 const { apply, parallel, series, waterfall } = require('async')
 const RTM_EVENTS = require('@slack/client').RTM_EVENTS
+const listenInChannel = require('./listenInChannel.js')
 const { interactiveResponse } = require('../interactiveMessagesManager.js')
 const iT = require('./interactionText.js')
 const Metamaps = require('./metamaps.js')
@@ -7,16 +8,6 @@ const { dmForUserId } = require('./clientHelpers.js')
 
 const processes = {
   'opinion poll': require('./opinion-poll.js')
-}
-
-function listenInChannel (rtmBot, channel, cb) {
-  rtmBot.once(RTM_EVENTS.MESSAGE, function (message) {
-    if (message.text && message.channel === channel && message.user !== rtmBot.activeUserId) {
-      cb(null, message)
-    } else {
-      listenInChannel(rtmBot, channel, cb)
-    }
-  })
 }
 
 
@@ -187,6 +178,29 @@ function collectParticipants (context, cb) {
 module.exports.collectParticipants = collectParticipants
 
 
+function startOrCancel (context, cb) {
+  const { rtmBot, facilitatorDM } = context
+  rtmBot.sendMessage(iT('en.session.startOrCancel.explain'), facilitatorDM)
+  // loop without re-explaining
+  function collect () {
+    listenInChannel(rtmBot, facilitatorDM, function (err, message) {
+      if (err) {
+        cb(err)
+        return
+      }
+      if (message.text === 'cancel') {
+        // use this special err code for early exits
+        cb('canceled')
+      } else if (message.text === 'start') {
+        cb()
+      } else collect()
+    })
+  }
+  collect()
+}
+module.exports.collectParticipants = collectParticipants
+
+
 function configureSession (context, facilitatorDM, cb) {
   const { rtmBot, tokens, sessionType, user } = context
   const config = {
@@ -202,9 +216,13 @@ function configureSession (context, facilitatorDM, cb) {
     linkedChannel: apply(collectChannel, newContext),
     linkedMap: apply(collectMap, newContext),
     processConfig: apply(collectProcessSpecificConfig, newContext),
-    participantIds: apply(collectParticipants, newContext)
+    participantIds: apply(collectParticipants, newContext),
+    startOrCancel: apply(startOrCancel, newContext)
   }, function (err, result) {
     if (err) {
+      if (err === 'canceled') {
+        rtmBot.sendMessage(iT('en.session.startOrCancel.canceled'), facilitatorDM)
+      }
       cb(err)
       return
     }
@@ -297,13 +315,13 @@ function closeSession (context, configuration, result, cb) {
   const { process, rtmBot } = context
   const { facilitatorDM, linkedChannel } = configuration
   const linkedChannelId = linkedChannel.id
-  rtmBot.sendMessage('session closed', facilitatorDM)
+  rtmBot.sendMessage(iT('en.session.facilitatorSessionClosed'), facilitatorDM)
   process.formatResults(result, function (err, formatted) {
     if (err) {
       cb(err)
       return
     }
-    // display results of the session in channel
+    rtmBot.sendMessage(iT('en.session.channelResults', configuration), linkedChannelId)
     rtmBot.sendMessage(formatted, linkedChannelId)
     cb(null, configuration, result)
   })
