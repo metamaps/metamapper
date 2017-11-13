@@ -356,7 +356,7 @@ module.exports = {
       }
       */
 
-      string += `${withId ? `(${t.id})` : ''}<${noApiRootUrl}/topics/${t.id}|${t.name}> (${metacode[0]})\n` //add in ${mapID}
+      string += `${withId ? `(${t.id}) ` : ''}<${noApiRootUrl}/topics/${t.id}|${t.name}> (${metacode[0]})\n` //add in ${mapID}
     })
     return string
   },

@@ -63,6 +63,7 @@ They'll guide the process and be able to communicate messages to you throughout.
       collectMetacode: {
         explain: 'The participants need to know what type of response you\'re looking for. The one you choose will be assigned to all of their responses. You can change it any later time. Select a response type by typing the name',
       },
+      createdTopic: 'Your response was captured.',
       participantSetTopic: `The facilitator has set a new topic to respond to\n> ${v.name}`,
       facilitatorSetTopic: 'Ok, participants know that their responses will now be related to this topic.',
       facilitatorNoTopic: 'There is no topic with that id',

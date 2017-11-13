@@ -37,10 +37,16 @@ function addTopicToMap(mapId, topic, token, cb) {
 
 
 function collectWhenTopics (context, config, cb) {
-  const { rtmBot, facilitatorDM, tokens, user } = context
+  const { webBot, rtmBot, facilitatorDM, tokens, user } = context
   const { linkedMap: { id, topics, permission } } = config
   rtmBot.sendMessage(iT('en.buildingContext.collectFocalTopic.explainHasTopics'), facilitatorDM)
-  const formatted = Metamaps.formatTopicsForDisplay(topics, true)
+  const formatted = topics.map(t => {
+    const metacode = Metamaps.findMetacodeByNameIdOrEmoji(t.metacode_id)
+    let string
+    string = `:${metacode[2]}: `
+    string += `(${t.id}) ${t.name}\n`
+    return string
+  }).join('')
   rtmBot.sendMessage(formatted, facilitatorDM)
   listenInChannel(rtmBot, facilitatorDM, function (err, message) {
     if (err) {
@@ -173,9 +179,10 @@ function main (context, configuration, cb) {
     }
     addTopicToMap(id, topic, tokens[userId], function (err, t) {
       if (err) {
-        // TODO: send a message to the user
+        rtmBot.sendMessage('There was an error creating that topic', err)
         return
       }
+      rtmBot.sendMessage(iT('en.buildingContext.createdTopic'), dmId)
       stats.counts.generatedTopics += 1
       configuration.linkedMap.topics.push(t)
       // create synapse to focalTopic
