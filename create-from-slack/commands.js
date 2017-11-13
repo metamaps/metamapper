@@ -6,6 +6,7 @@ const { getClientsForTeam } = require('./clientsForTeam')
 const iT = require('./interactionText.js')
 const Metamaps = require('./metamaps.js')
 const session = require('./session.js')
+const processes = require('./processes')
 const projects = require('./projects.js')
 
 module.exports = function (
@@ -436,8 +437,8 @@ module.exports = function (
       helpText: "TODO: write this",
       requireUser: true,
       check: function (message) {
-        // TODO: check that it's a valid session type
-        return true
+        const sessionType = message.text.substring(6).trim()
+        return Object.keys(processes).indexOf(sessionType) > -1
       },
       run: function (message) {
         var mapId = getChannelSetting(message.channel, 'map')

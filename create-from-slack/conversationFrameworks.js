@@ -71,3 +71,20 @@ function actionTillDone (rtm, channel, action, done) {
   })
 }
 module.exports.actionTillDone = actionTillDone
+
+
+function listenInChannelTillCancel (context, channel, cb) {
+  const { rtmBot } = context
+
+  function messageCallback (message) {
+    if (message.channel !== channel || !message.text) return
+    cb(message)
+  }
+  rtmBot.on(RTM_EVENTS.MESSAGE, messageCallback)
+
+  function cancel () {
+    rtmBot.removeListener(RTM_EVENTS.MESSAGE, messageCallback)
+  }
+  return cancel
+}
+module.exports.listenInChannelTillCancel = listenInChannelTillCancel

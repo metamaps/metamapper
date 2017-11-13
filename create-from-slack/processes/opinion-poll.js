@@ -1,14 +1,13 @@
 var RTM_EVENTS = require('@slack/client').RTM_EVENTS
-var Metamaps = require('./metamaps.js')
 const { apply, parallel, reduce } = require('async')
-const { dmForUserId } = require('./clientHelpers.js')
-const { interactiveResponse } = require('../interactiveMessagesManager.js')
-const interactionText = require('./interactionText.js')
+const { interactiveResponse } = require('../../interactiveMessagesManager.js')
+const iT = require('../interactionText.js')
 
 
-function configure (context, cb) {
-
+function configure (context, config, cb) {
+  cb(null, config)
 }
+module.exports.configure = configure
 
 function collectResponseForTopic (context, total, userId, memo, topic, cb) {
   const { dmIds } = context
@@ -44,7 +43,7 @@ function main (context, configuration, cb) {
   // collect responses from each participant in parallel
   parallel(participantIds.map(userId =>
     function (finished) {
-      rtmBot.sendMessage(interactionText('en.opinionPoll.participantWillStart'), dmIds[userId])
+      rtmBot.sendMessage(iT('en.opinionPoll.participantWillStart'), dmIds[userId])
       // collect a response for each topic from the user, one at a time,
       // into an array using async/reduce
       reduce(
@@ -57,7 +56,7 @@ function main (context, configuration, cb) {
             finished(err)
             return
           }
-          rtmBot.sendMessage(interactionText('en.opinionPoll.participantFinished'), dmIds[userId])
+          rtmBot.sendMessage(iT('en.opinionPoll.participantFinished'), dmIds[userId])
           finished(null, {
             userId,
             opinions

@@ -12,6 +12,7 @@ const interactionText = {
       signIn: `Click here to sign in to metamaps: ${v.signInUrl}?id=${v.id}`
     },
     session: {
+      announcement: `:loudspeaker: _facilitator announcement_ \n> ${v.text}`,
       moveToDM: 'Ok. Moving to a DM to set it up.',
       facilitatorOverview: `There are 4 steps to setting up a session:
 1. Setting the title and details
@@ -53,6 +54,27 @@ They'll guide the process and be able to communicate messages to you throughout.
       participantWillStart: 'The poll is beginning. Respond agree, disagree, or pass until there are none left.',
       // todo: replace "original channel" with link to that channel
       participantFinished: 'That\'s all of them. Results will be posted back in the original channel when everyone has completed the poll.'
+    },
+    buildingContext: {
+      collectFocalTopic: {
+        explainHasTopics: 'When the session starts, participants will be prompted to respond to a focused topic of your choice. Select one from the existing topics by typing its\' ID, or create a new one by typing it in. If creating one, include a metacode emoji to assign a metacode.',
+        explainNoTopics: 'When the session starts, participants will be prompted to respond to a focused topic of your choice. Create a new one by typing it in. Include a metacode emoji to assign a metacode.',
+      },
+      collectMetacode: {
+        explain: 'The participants need to know what type of response you\'re looking for. The one you choose will be assigned to all of their responses. You can change it any later time. Select a response type by typing the name',
+      },
+      participantSetTopic: `The facilitator has set a new topic to respond to\n> ${v.name}`,
+      facilitatorSetTopic: 'Ok, participants know that their responses will now be related to this topic.',
+      facilitatorNoTopic: 'There is no topic with that id',
+      participantUnsetTopic: 'There is no longer a topic being discussed. Please wait for the facilitator to set a new one.',
+      facilitatorUnsetTopic: 'Ok, participants will not be able to respond to any topic at the moment.',
+      participantSetTopic: `The facilitator has set a new response type: :${v[2]}: ${v[0]}`,
+      facilitatorSetTopic: `Ok, participants know that the set response type is now: :${v[2]}: ${v[0]}`,
+      facilitatorNoMetacode: 'There is no metacode with that name',
+      facilitatorExplain: 'The participants have been setup responding to your initial topic.',
+      facilitatorCommands: 'The following commands are available during the session\n`set topic [ID]` to switch topics\n`set response metacode [NAME]` to switch response types\n`unset topic` to disable responses\n`end session` to close the session completely',
+      participantInitialTopic: `The first topic we\'ll think about is: \n> ${v.name}`,
+      participantInitialMetacode: `The facilitator is inviting :${v[2]}: ${v[0]} responses. Respond with your own ${v[0]} just by typing them in here and sending them.`
     }
   }
 }
