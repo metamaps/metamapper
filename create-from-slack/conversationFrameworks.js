@@ -77,7 +77,7 @@ function listenInChannelTillCancel (context, channel, cb) {
   const { rtmBot } = context
 
   function messageCallback (message) {
-    if (message.channel !== channel || !message.text) return
+    if (!(message.channel === channel && message.text && message.user !== rtmBot.activeUserId)) return
     cb(message)
   }
   rtmBot.on(RTM_EVENTS.MESSAGE, messageCallback)

@@ -37,7 +37,7 @@ function addTopicToMap(mapId, topic, token, cb) {
 
 
 function collectWhenTopics (context, config, cb) {
-  const { webBot, rtmBot, facilitatorDM, tokens, user } = context
+  const { rtmBot, facilitatorDM, tokens, user } = context
   const { linkedMap: { id, topics, permission } } = config
   rtmBot.sendMessage(iT('en.buildingContext.collectFocalTopic.explainHasTopics'), facilitatorDM)
   const formatted = topics.map(t => {
