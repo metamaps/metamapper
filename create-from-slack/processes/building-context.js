@@ -203,7 +203,7 @@ function main (context, configuration, cb) {
   }
   Object.keys(dmIds).forEach(function (userId) {
     const wrappedHandler = apply(handleParticipantMessage, userId, dmIds[userId])
-    const canceler = listenInChannelTillCancel(context, facilitatorDM, wrappedHandler)
+    const canceler = listenInChannelTillCancel(context, dmIds[userId], wrappedHandler)
     participantCancellers.push(canceler)
   })
   // setup commands and event listeners for the facilitator
