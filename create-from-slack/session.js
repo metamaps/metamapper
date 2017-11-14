@@ -277,6 +277,7 @@ function getDmIds (context, participantIds, cb) {
 
 
 function runSession (context, configuration, cb) {
+  console.log('config', configuration)
   const { process, rtmBot } = context
   const {
     facilitatorDM,
