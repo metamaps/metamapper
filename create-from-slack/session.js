@@ -62,6 +62,7 @@ function collectChannel (context, cb) {
         collect()
         return
       }
+      console.log('channel at moment of collection', result)
       cb(null, result)
     })
   }
@@ -277,7 +278,7 @@ function getDmIds (context, participantIds, cb) {
 
 
 function runSession (context, configuration, cb) {
-  console.log('config', configuration)
+  console.log('config', configuration.linkedChannel)
   const { process, rtmBot } = context
   const {
     facilitatorDM,
