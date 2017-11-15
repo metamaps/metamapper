@@ -244,7 +244,7 @@ function main (context, configuration, cb) {
       end()
     } else if (message.text.startsWith('set topic ')) {
       setTopic(message.text.slice(10))
-    } else if (message.text.startsWith('set response metacode ')) {
+    } else if (message.text.startsWith('set response type ')) {
       setMetacode(message.text.slice(22))
     } else if (message.text.startsWith('unset topic')) {
       unsetTopic()

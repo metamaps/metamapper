@@ -73,7 +73,7 @@ They'll guide the process and be able to communicate messages to you throughout.
       facilitatorSetMetacode: `Ok, participants know that the set response type is now: :${v[2]}: ${v[0]}`,
       facilitatorNoMetacode: 'There is no metacode with that name',
       facilitatorExplain: 'The participants have been setup responding to your initial topic.',
-      facilitatorCommands: 'The following commands are available during the session\n`set topic [ID]` to switch topics\n`set response metacode [NAME]` to switch response types\n`unset topic` to disable responses\n`end session` to close the session completely',
+      facilitatorCommands: 'The following commands are available during the session\n`set topic [ID]` to switch topics\n`set response type [NAME]` to switch response types\n`unset topic` to disable responses\n`end session` to close the session completely',
       participantInitialTopic: `The first topic we\'ll think about is: \n> ${v.name}`,
       participantInitialMetacode: `The facilitator is inviting :${v[2]}: ${v[0]} responses. Respond with your own ${v[0]} just by typing them in here and sending them.`
     }
