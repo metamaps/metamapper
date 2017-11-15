@@ -38,8 +38,17 @@ function interactiveResponse (context, channel, config, cb) {
       options
     }
   })
+  // return this so that the caller of this function can cancel this
+  // like how setTimeout works
+  return callback_id
 }
 module.exports.interactiveResponse = interactiveResponse
+
+
+function clearInteractiveResponse (id) {
+  interactiveMessageCallbacks[id] = undefined
+}
+module.exports.clearInteractiveResponse = clearInteractiveResponse
 
 
 function clearInteractiveResponses () {

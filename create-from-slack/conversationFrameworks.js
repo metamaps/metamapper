@@ -74,10 +74,13 @@ module.exports.actionTillDone = actionTillDone
 
 
 function listenInChannelTillCancel (context, channel, cb) {
-  const { rtmBot } = context
+  const { rtmBot, webBot } = context
 
   function messageCallback (message) {
-    if (message.channel === channel && message.text && message.user !== rtmBot.activeUserId) {
+    if (message.channel === channel
+        && message.text
+        && message.user !== rtmBot.activeUserId
+        && message.user !== webBot.activeUserId) {
       cb(message)
     }
   }

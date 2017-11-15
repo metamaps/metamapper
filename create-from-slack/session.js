@@ -1,7 +1,7 @@
 const { apply, parallel, series, waterfall } = require('async')
 const RTM_EVENTS = require('@slack/client').RTM_EVENTS
 const listenInChannel = require('./listenInChannel.js')
-const { interactiveResponse } = require('../interactiveMessagesManager.js')
+const { interactiveResponse, clearInteractiveResponse } = require('../interactiveMessagesManager.js')
 const iT = require('./interactionText.js')
 const Metamaps = require('./metamaps.js')
 const { dmForUserId } = require('./clientHelpers.js')
@@ -17,6 +17,10 @@ function collectTitle (context, cb) {
       cb(err)
       return
     }
+    if (message.text === 'restart') {
+      cb('restart')
+      return
+    }
     // TODO: validate maximum length?
     cb(null, message.text)
   })
@@ -30,6 +34,10 @@ function collectDescription (context, cb) {
   listenInChannel(rtmBot, facilitatorDM, function (err, message) {
     if (err) {
       cb(err)
+      return
+    }
+    if (message.text === 'restart') {
+      cb('restart')
       return
     }
     // TODO: validate it?
@@ -48,6 +56,10 @@ function collectChannel (context, cb) {
         cb(err)
         return
       }
+      if (message.text === 'restart') {
+        cb('restart')
+        return
+      }
       const idMatch = new RegExp(/<#(.*?)\|/).exec(message.text)
       const id = idMatch && idMatch[1]
       const nameMatch = new RegExp(/\|(.*?)>/).exec(message.text)
@@ -62,7 +74,6 @@ function collectChannel (context, cb) {
         collect()
         return
       }
-      console.log('channel at moment of collection', result)
       cb(null, result)
     })
   }
@@ -74,65 +85,60 @@ module.exports.collectChannel = collectChannel
 
 // collectMap helper
 const NEW_MAP_FLAG = 'new-map'
-function getDefaultMapIfSet (mapId, token, cb) {
-  if (mapId) {
-    Metamaps.getMap(mapId, token, cb)
-  } else {
-    cb()
-  }
-}
 // collectMap helper
-function collectMapResponse (context, facilitatorDM, map, cb) {
-  // the ultimate goal here is to get a map ID back from the user as a value
-  // create an interactiveMessage with the default map as an option
-  // TODO: add keyboard input option
-  const defaultOption = map ? { text: 'Use Channel Map', value: map.id.toString(), replaceWith: 'Selected Channel Map' } : {}
+function collectMapResponse (context, facilitatorDM, cb) {
   const newMapOption = { text: 'New Map with Session Title', value: NEW_MAP_FLAG, replaceWith: 'Opted to Create New Map' }
   const interactiveConfig = {
     outerText: iT('en.session.collectMap.explain'),
-    text: map ? `The map set for that channel is ${map.name}` : '',
-    options: map ? [defaultOption, newMapOption] : [newMapOption]
+    text: '',
+    options: [newMapOption]
   }
-  interactiveResponse(context, facilitatorDM, interactiveConfig, cb)
+  return interactiveResponse(context, facilitatorDM, interactiveConfig, cb)
 }
 function collectMap (context, cb) {
-  const { mapId, rtmBot, facilitatorDM, tokens, user } = context
+  const { rtmBot, facilitatorDM, tokens, user } = context
+  let interactiveCallbackId, responseListenerCancel
 
-  function complete (map) {
-    const msg = iT('en.session.collectMap.acknowledgeMap', { mapName: map.name })
-    rtmBot.sendMessage(msg, facilitatorDM)
-    cb(null, map)
-  }
-
-  getDefaultMapIfSet(mapId, tokens[user], function (err, map) {
-    if (err) {
-      rtmBot.sendMessage('There was an error trying to fetch the default map', facilitatorDM)
+  // the idea here is to accept two different input types
+  // cancel the other, whichever one gets a response
+  responseListenerCancel = listenInChannelTillCancel(context, facilitatorDM, function (message) {
+    responseListenerCancel()
+    clearInteractiveResponse(interactiveCallbackId)
+    if (message.text === 'restart') {
+      cb('restart')
+      return
     }
-    collectMapResponse(context, facilitatorDM, map, function (err2, selectedMapId) {
-      if (err2) {
-        rtmBot.sendMessage('There was an error trying to select a map', facilitatorDM)
-        // TODO: what?
+    if (message.text === 'new') {
+      rtmBot.sendMessage(iT('en.session.collectMap.willCreate'), facilitatorDM)
+      // special case, call back with just 'new-map' for map value
+      // it will be created later in the flow with session title and description
+      cb(null, NEW_MAP_FLAG)
+      return
+    }
+    // we need to fetch the map, specified by the ID the user provided
+    Metamaps.getMap(message.text, tokens[user], function (err, map) {
+      if (err) {
+        rtmBot.sendMessage('There was an error trying to fetch the selected map', facilitatorDM)
+        cb(err)
+        return
       }
-      if (selectedMapId === NEW_MAP_FLAG) {
-        rtmBot.sendMessage(iT('en.session.collectMap.willCreate'), facilitatorDM)
-        // special case, call back with just 'new-map' for map value
-        // it will be created later in the flow with session title and description
-        cb(null, selectedMapId)
-      } else if (selectedMapId === mapId) {
-        // we already have the map
-        complete(map)
-      } else {
-        // we need to fetch the map
-        Metamaps.getMap(selectedMapId, tokens[user], function (err, map) {
-          if (err) {
-            rtmBot.sendMessage('There was an error trying to fetch the selected map', facilitatorDM)
-            cb(err)
-            return
-          }
-          complete(map)
-        })
-      }
+      const msg = iT('en.session.collectMap.acknowledgeMap', { mapName: map.name })
+      rtmBot.sendMessage(msg, facilitatorDM)
+      cb(null, map)
     })
+  })
+  interactiveCallbackId = collectMapResponse(context, facilitatorDM, function (err, value) {
+    responseListenerCancel()
+    if (err) {
+      rtmBot.sendMessage('There was an error trying to select a map', facilitatorDM)
+      // TODO: what?
+    }
+    if (value === NEW_MAP_FLAG) {
+      rtmBot.sendMessage(iT('en.session.collectMap.willCreate'), facilitatorDM)
+      // special case, call back with just 'new-map' for map value
+      // it will be created later in the flow with session title and description
+      cb(null, NEW_MAP_FLAG)
+    }
   })
 }
 module.exports.collectMap = collectMap
@@ -148,6 +154,10 @@ function collectParticipants (context, cb) {
     listenInChannel(rtmBot, facilitatorDM, function (err, message) {
       if (err) {
         cb(err)
+        return
+      }
+      if (message.text === 'restart') {
+        cb('restart')
         return
       }
       const pattern = new RegExp(/<@(.*?)>/g)
@@ -201,6 +211,10 @@ function startOrCancel (context, config, cb) {
         cb(err)
         return
       }
+      if (message.text === 'restart') {
+        cb('restart')
+        return
+      }
       if (message.text === 'cancel') {
         rtmBot.sendMessage(iT('en.session.startOrCancel.canceled'), facilitatorDM)
         // use this special err code for early exits
@@ -239,7 +253,10 @@ function configureSession (context, cb) {
       apply(process.configure, newContext),
       apply(startOrCancel, newContext)
   ], function (err, result) {
-    if (err) {
+    if (err === 'restart') {
+      configureSession(context, cb)
+      return
+    } else if (err) {
       cb(err)
       return
     }

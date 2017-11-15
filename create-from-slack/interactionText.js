@@ -27,8 +27,8 @@ Let’s start.`,
         tryAgain: 'That\'s not a valid channel, try again.'
       },
       collectMap: {
-        explain: 'What map should the session be linked to?',
-        willCreate: 'Ok. That map will be created.',
+        explain: 'What map should the session be linked to? Type a map ID, or type or click \'new\'',
+        willCreate: 'Ok. A map will be created.',
         acknowledgeMap: `Ok. Session is linked to map ${v.mapName}.`
       },
       collectParticipants: {
@@ -36,7 +36,7 @@ Let’s start.`,
         tryAgain: 'You didn\'t mention anyone to include. Try again.'
       },
       startOrCancel: {
-        explain: 'The session is all set. Type *start* to begin or *cancel* to exit.',
+        explain: 'The session is all set. Type `start` to begin, `restart` to reconfigure, or `cancel` to exit.',
         canceled: 'Ok, canceling this session.'
       },
       facilitatorSessionStarting: `The session is beginning. You will be updated here with information about how people are participating, and be able to guide the process.

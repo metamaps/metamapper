@@ -438,9 +438,15 @@ module.exports = function (
       requireUser: true,
       check: function (message) {
         const sessionType = message.text.substring(6).trim()
-        return Object.keys(processes).indexOf(sessionType) > -1
+        return Object.keys(processes).indexOf(sessionType) > -1 || sessionType === 'session'
       },
       run: function (message) {
+        let sessionType
+        if (message.text === 'start session') {
+          sessionType = 'building context'
+        } else {
+          sessionType = message.text.substring(6).trim()
+        }
         var mapId = getChannelSetting(message.channel, 'map')
         const context = {
           dataStore,
@@ -448,7 +454,7 @@ module.exports = function (
           rtmBot: rtm,
           tokens,
           mapId,
-          sessionType: message.text.substring(6).trim(),
+          sessionType,
           user: message.user,
           channel: message.channel
         }
