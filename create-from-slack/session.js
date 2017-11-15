@@ -286,6 +286,7 @@ function runSession (context, configuration, cb) {
     participantIds
   } = configuration
   const linkedChannelId = linkedChannel.id
+  console.log('linkedChannelId', linkedChannelId)
   // TODO: show a link to the map to the facilitator
   rtmBot.sendMessage(iT('en.session.channelSessionStarting', configuration), linkedChannelId)
   rtmBot.sendMessage(iT('en.session.facilitatorSessionStarting'), facilitatorDM)
