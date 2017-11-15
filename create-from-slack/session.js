@@ -317,18 +317,22 @@ function runSession (context, configuration, cb) {
         return
       }
       cancelAnnounce()
-      cb(null, configuration, result)
+      cb(null, configuration, result, dmIds)
     })
   })
 }
 module.exports.runSession = runSession
 
 
-function closeSession (context, configuration, result, cb) {
+function closeSession (context, configuration, result, dmIds, cb) {
   const { process, rtmBot } = context
   const { facilitatorDM, linkedChannel } = configuration
   const linkedChannelId = linkedChannel.id
-  rtmBot.sendMessage(iT('en.session.facilitatorSessionClosed'), facilitatorDM)
+  rtmBot.sendMessage(iT('en.session.facilitatorSessionClosed', {channelId: linkedChannelId}), facilitatorDM)
+  // message each participant in a DM
+  Object.keys(dmIds).forEach(function (userId) {
+    rtmBot.sendMessage(iT('en.session.participantSessionClosed', {channelId: linkedChannelId}), dmIds[userId])
+  })
   process.formatResults(result, function (err, formatted) {
     if (err) {
       cb(err)

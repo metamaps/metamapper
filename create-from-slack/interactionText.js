@@ -46,14 +46,14 @@ Results will be posted back here when the process is complete.`,
       participantSessionStarting: `You've been invited to an ${v.sessionType} session by <@${v.facilitator}> along with ${participantCount - 1} other participants.
 They'll guide the process and be able to communicate messages to you throughout. The subject for this session is:\n*${v.title}*`,
       participantSessionDescription: `Here is the context you need:\n*${v.description}*`,
-      facilitatorSessionClosed: 'The session has closed.',
-      channelResults: `Here are the results from the ${v.sessionType} session on *${v.title}*:\n`
+      facilitatorSessionClosed: `The session is over. Results are posted in <#${v.channelId}>.`,
+      channelResults: `Here are the results from the ${v.sessionType} session on *${v.title}*:\n`,
+      participantSessionClosed:  `The session is over. Results are posted in <#${v.channelId}>.`
     },
     opinionPoll: {
       // todo: make this based on poll parameters
       participantWillStart: 'The poll is beginning. Respond agree, disagree, or pass until there are none left.',
-      // todo: replace "original channel" with link to that channel
-      participantFinished: 'That\'s all of them. Results will be posted back in the original channel when everyone has completed the poll.'
+      participantFinished: 'That\'s all of them. You will be notified when everyone has completed.'
     },
     buildingContext: {
       collectFocalTopic: {
@@ -65,17 +65,17 @@ They'll guide the process and be able to communicate messages to you throughout.
       },
       createdTopic: 'Your response was captured.',
       participantSetTopic: `The facilitator has set a new topic to respond to\n> ${v.name}`,
-      facilitatorSetTopic: 'Ok, participants know that their responses will now be related to this topic.',
+      facilitatorSetTopic: 'Ok, informing participants of the new topic to respond to.',
       facilitatorNoTopic: 'There is no topic with that id',
       participantUnsetTopic: 'There is no longer a topic being discussed. Please wait for the facilitator to set a new one.',
-      facilitatorUnsetTopic: 'Ok, participants will not be able to respond to any topic at the moment.',
-      participantSetMetacode: `The facilitator has set a new response type: :${v[2]}: ${v[0]}`,
-      facilitatorSetMetacode: `Ok, participants know that the set response type is now: :${v[2]}: ${v[0]}`,
-      facilitatorNoMetacode: 'There is no metacode with that name',
-      facilitatorExplain: 'The participants have been setup responding to your initial topic.',
+      facilitatorUnsetTopic: 'Ok, informing participants there is longer a topic to respond to.',
+      participantSetMetacode: `The facilitator is now looking for responses of type: :${v[2]}: ${v[0]}`,
+      facilitatorSetMetacode: `Ok, informing participants to now respond with: :${v[2]}: ${v[0]}`,
+      facilitatorNoMetacode: 'There is no metacode with that name.',
+      facilitatorExplain: 'The participants have been asked to respond to your initial topic.',
       facilitatorCommands: 'The following commands are available during the session\n`set topic [ID]` to switch topics\n`set response type [NAME]` to switch response types\n`unset topic` to disable responses\n`end session` to close the session completely',
       participantInitialTopic: `The first topic we\'ll think about is: \n> ${v.name}`,
-      participantInitialMetacode: `The facilitator is inviting :${v[2]}: ${v[0]} responses. Respond with your own ${v[0]} just by typing them in here and sending them.`
+      participantInitialMetacode: `The facilitator is inviting :${v[2]}: ${v[0]} responses. Respond with your own ${v[0]} just by typing them in here and sending them.`,
     }
   }
 }
