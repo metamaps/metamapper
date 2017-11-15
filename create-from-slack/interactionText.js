@@ -40,7 +40,7 @@ Let’s start.`,
         canceled: 'Ok, canceling this session.'
       },
       facilitatorSessionStarting: `The session is beginning. You will be updated here with information about how people are participating, and be able to guide the process.
-You can make announcements to all participants by typing “announce: “ followed by your message`,
+Use \`announce: [MESSAGE]\` to directly message all the participants.`,
       channelSessionStarting: `There is an ${v.sessionType} session on *${v.title}* beginning with ${participantCount} participants.
 Results will be posted back here when the process is complete.`,
       participantSessionStarting: `You've been invited to an ${v.sessionType} session by <@${v.facilitator}> along with ${participantCount - 1} other participants.
@@ -68,12 +68,12 @@ They'll guide the process and be able to communicate messages to you throughout.
       facilitatorSetTopic: 'Ok, informing participants of the new topic to respond to.',
       facilitatorNoTopic: 'There is no topic with that id',
       participantUnsetTopic: 'There is no longer a topic being discussed. Please wait for the facilitator to set a new one.',
-      facilitatorUnsetTopic: 'Ok, informing participants there is longer a topic to respond to.',
+      facilitatorUnsetTopic: 'Ok, informing participants there is no longer a topic to respond to.',
       participantSetMetacode: `The facilitator is now looking for responses of type: :${v[2]}: ${v[0]}`,
       facilitatorSetMetacode: `Ok, informing participants to now respond with: :${v[2]}: ${v[0]}`,
       facilitatorNoMetacode: 'There is no metacode with that name.',
       facilitatorExplain: 'The participants have been asked to respond to your initial topic.',
-      facilitatorCommands: 'The following commands are available during the session\n`set topic [ID]` to switch topics\n`set response type [NAME]` to switch response types\n`unset topic` to disable responses\n`end session` to close the session completely',
+      facilitatorCommands: 'The following commands can be used to steer the session\n`set topic [ID]` to switch topics\n`set response type [NAME]` to switch response types\n`unset topic` to disable responses\n`end session` to close the session completely',
       participantInitialTopic: `The first topic we\'ll think about is: \n> ${v.name}`,
       participantInitialMetacode: `The facilitator is inviting :${v[2]}: ${v[0]} responses. Respond with your own ${v[0]} just by typing them in here and sending them.`,
     }
