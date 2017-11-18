@@ -203,7 +203,7 @@ function main (context, configuration, cb) {
   }
   Object.keys(dmIds).forEach(function (userId) {
     const wrappedHandler = apply(handleParticipantMessage, userId, dmIds[userId])
-    const canceler = listenInChannelTillCancel(context, facilitatorDM, wrappedHandler)
+    const canceler = listenInChannelTillCancel(context, dmIds[userId], wrappedHandler)
     participantCancellers.push(canceler)
   })
   // setup commands and event listeners for the facilitator
@@ -273,8 +273,8 @@ function main (context, configuration, cb) {
 
   // offer instructions to the facilitator
   // and inform that the participants have kicked off with the initial topic and responses
-  rtmBot.sendMessage(iT('en.buildingContext.facilitatorExplain'), facilitatorDM)
   rtmBot.sendMessage(iT('en.buildingContext.facilitatorCommands'), facilitatorDM)
+  rtmBot.sendMessage(iT('en.buildingContext.facilitatorExplain'), facilitatorDM)
 
   // offer the initial topic to the participants
   Object.keys(dmIds).forEach(function (userId) {
