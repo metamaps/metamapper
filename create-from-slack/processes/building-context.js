@@ -260,7 +260,7 @@ function main (context, configuration, cb) {
           .replace('<', '')
           .replace('>','')
           .split('/')
-        let selectedTopic = selectedTopicParts[selectedTopicParts.length - 1]
+        selectedTopic = selectedTopicParts[selectedTopicParts.length - 1]
       }
       setTopic(selectedTopic)
     } else if (message.text.startsWith('set response type ')) {
