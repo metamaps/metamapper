@@ -3,6 +3,7 @@ const { get } = require('lodash')
 module.exports = function (path, variables) {
 const v = variables || {}
 const participantCount = v.participantIds && v.participantIds.length
+const mapUrl = process.env.METAMAPS_URL + '/maps/' + (v.linkedMap ? v.linkedMap.id : '')
 
 const interactionText = {
   en: {
@@ -27,9 +28,9 @@ Let’s start.`,
         tryAgain: 'That\'s not a valid channel, try again.'
       },
       collectMap: {
-        explain: 'What map should the session be linked to? Type a map ID, or type or click \'new\'',
+        explain: 'What map should the session be linked to? Submit a map URL, or type or click \'new\'',
         willCreate: 'Ok. A map will be created.',
-        acknowledgeMap: `Ok. Session is linked to map ${v.mapName}.`
+        acknowledgeMap: `Ok. Session is linked to map *${v.mapName}*.`
       },
       collectParticipants: {
         explain: 'Use the @ symbol to mention the people to include in the session.',
@@ -39,7 +40,7 @@ Let’s start.`,
         explain: 'The session is all set. Type `start` to begin, `restart` to reconfigure, or `cancel` to exit.',
         canceled: 'Ok, canceling this session.'
       },
-      facilitatorSessionStarting: `The session is beginning. You will be updated here with information about how people are participating, and be able to guide the process.
+      facilitatorSessionStarting: `The session is beginning. You can open the linked map here ${mapUrl}. From this chat you will be able to guide the process.
 Use \`announce: [MESSAGE]\` to directly message all the participants.`,
       channelSessionStarting: `There is an ${v.sessionType} session on *${v.title}* beginning with ${participantCount} participants.
 Results will be posted back here when the process is complete.`,
@@ -47,7 +48,7 @@ Results will be posted back here when the process is complete.`,
 They'll guide the process and be able to communicate messages to you throughout. The subject for this session is:\n*${v.title}*`,
       participantSessionDescription: `Here is the context you need:\n*${v.description}*`,
       facilitatorSessionClosed: `The session is over. Results are posted in <#${v.channelId}>.`,
-      channelResults: `Here are the results from the ${v.sessionType} session on *${v.title}*:\n`,
+      channelResults: `Here are the results from the ${v.sessionType} session on *${v.title}*, linked to map ${mapUrl}:\n`,
       participantSessionClosed:  `The session is over. Results are posted in <#${v.channelId}>.`
     },
     opinionPoll: {
@@ -57,23 +58,25 @@ They'll guide the process and be able to communicate messages to you throughout.
     },
     buildingContext: {
       collectFocalTopic: {
-        explainHasTopics: 'When the session starts, participants will be prompted to respond to a focused topic of your choice. Select one from the existing topics by typing its\' ID, or create a new one by typing it in. If creating one, include a metacode emoji to assign a metacode.',
-        explainNoTopics: 'When the session starts, participants will be prompted to respond to a focused topic of your choice. Create a new one by typing it in. Include a metacode emoji to assign a metacode.',
+        explainHasTopics: 'When the session starts, participants will be prompted to respond to a focused topic of your choice. Select one from the existing topics by typing its\' ID, or create a new one by typing it in.',
+        explainNoTopics: 'When the session starts, participants will be prompted to respond to a focused topic of your choice. Create a new one by typing it in.',
       },
       collectMetacode: {
         explain: 'The participants need to know what type of response you\'re looking for. The one you choose will be assigned to all of their responses. You can change it any later time. Select a response type by typing the name',
       },
       createdTopic: 'Your response was captured.',
-      participantSetTopic: `The facilitator has set a new topic to respond to\n> ${v.name}`,
-      facilitatorSetTopic: 'Ok, informing participants of the new topic to respond to.',
-      facilitatorNoTopic: 'There is no topic with that id',
+      participantSetTopic: `The facilitator has set a new topic to respond to\n> ${v.topicName}
+\n and they are looking for responses of the type :${v.metacodeEmoji}: ${v.metacodeName}`,
+      facilitatorSetTopic: 'Ok, informing participants of the new topic and response type.',
+      faciliatorSetTopicError: 'There was an error picking the response type. Try `set topic` again.',
+      facilitatorNoTopic: 'There is no topic with that URL or ID on the map.',
       participantUnsetTopic: 'There is no longer a topic being discussed. Please wait for the facilitator to set a new one.',
       facilitatorUnsetTopic: 'Ok, informing participants there is no longer a topic to respond to.',
       participantSetMetacode: `The facilitator is now looking for responses of type: :${v[2]}: ${v[0]}`,
       facilitatorSetMetacode: `Ok, informing participants to now respond with: :${v[2]}: ${v[0]}`,
       facilitatorNoMetacode: 'There is no metacode with that name.',
       facilitatorExplain: 'The participants have been asked to respond to your initial topic.',
-      facilitatorCommands: 'The following commands can be used to steer the session\n`set topic [ID]` to switch topics\n`set response type [NAME]` to switch response types\n`unset topic` to disable responses\n`end session` to close the session completely',
+      facilitatorCommands: 'The following commands can be used to steer the session\n`set topic [ID]-OR-[TOPIC_URL]` to switch topics\n`set response type [NAME]` to switch response types\n`unset topic` to disable responses\n`end session` to close the session completely',
       participantInitialTopic: `The first topic we\'ll think about is: \n> ${v.name}`,
       participantInitialMetacode: `The facilitator is inviting :${v[2]}: ${v[0]} responses. Respond with your own ${v[0]} just by typing them in here and sending them.`,
     }

@@ -116,7 +116,9 @@ function collectMap (context, cb) {
       return
     }
     // we need to fetch the map, specified by the ID the user provided
-    Metamaps.getMap(message.text, tokens[user], function (err, map) {
+    const partsArray = message.text.replace('<','').replace('>','').split('/')
+    const mapId = partsArray[partsArray.length - 1]
+    Metamaps.getMap(mapId, tokens[user], function (err, map) {
       if (err) {
         rtmBot.sendMessage('There was an error trying to fetch the selected map', facilitatorDM)
         cb(err)
@@ -302,9 +304,8 @@ function runSession (context, configuration, cb) {
     participantIds
   } = configuration
   const linkedChannelId = linkedChannel.id
-  // TODO: show a link to the map to the facilitator
   rtmBot.sendMessage(iT('en.session.channelSessionStarting', configuration), linkedChannelId)
-  rtmBot.sendMessage(iT('en.session.facilitatorSessionStarting'), facilitatorDM)
+  rtmBot.sendMessage(iT('en.session.facilitatorSessionStarting', configuration), facilitatorDM)
   // TODO: make sure all users have created and linked metamaps accounts
   // TODO: allow participants at any time to leave
   getDmIds(context, participantIds, function (err, dmIds) {
@@ -320,6 +321,7 @@ function runSession (context, configuration, cb) {
     const newContext = Object.assign({}, context, { dmIds })
     function announce (message) {
       if (!message.text.startsWith('announce: ')) return
+      rtmBot.sendMessage(iT('en.session.facilitatorAnnounce'), facilitatorDM)
       const text = message.text.slice(10)
       Object.keys(dmIds).forEach(function (userId) {
         rtmBot.sendMessage(iT('en.session.announcement', { text }), dmIds[userId])

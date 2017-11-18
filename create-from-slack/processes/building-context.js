@@ -42,10 +42,7 @@ function collectWhenTopics (context, config, cb) {
   rtmBot.sendMessage(iT('en.buildingContext.collectFocalTopic.explainHasTopics'), facilitatorDM)
   const formatted = topics.map(t => {
     const metacode = Metamaps.findMetacodeByNameIdOrEmoji(t.metacode_id)
-    let string
-    string = `:${metacode[2]}: `
-    string += `(${t.id}) ${t.name}\n`
-    return string
+    return `(${t.id}) :${metacode[2]}: ${t.name}\n`
   }).join('')
   rtmBot.sendMessage(formatted, facilitatorDM)
   listenInChannel(rtmBot, facilitatorDM, function (err, message) {
@@ -61,6 +58,7 @@ function collectWhenTopics (context, config, cb) {
         name: message.text,
         permission
       }
+      console.log('id-topic-token', id, topic, !!tokens[user])
       addTopicToMap(id, topic, tokens[user], function (err, t) {
         if (err) {
           cb(err)
@@ -86,6 +84,7 @@ function collectWhenNoTopics (context, config, cb) {
       name: message.text,
       permission
     }
+    console.log('id-topic-token', id, topic, !!tokens[user])
     addTopicToMap(id, topic, tokens[user], function (err, t) {
       if (err) {
         cb(err)
@@ -98,7 +97,6 @@ function collectWhenNoTopics (context, config, cb) {
 }
 
 function collectFocalTopic (context, config, cb) {
-  const { rtmBot, facilitatorDM } = context
   const { linkedMap: { topics } } = config
 
   if (topics && topics.length) {
@@ -116,7 +114,6 @@ function collectMetacode (context, config, cb) {
   rtmBot.sendMessage(iT('en.buildingContext.collectMetacode.explain'), facilitatorDM)
   rtmBot.sendMessage(metacodes.join(' '), facilitatorDM)
 
-  // loop without re-explaining
   function collect () {
     listenInChannel(rtmBot, facilitatorDM, function (err, message) {
       if (err) {
@@ -126,7 +123,10 @@ function collectMetacode (context, config, cb) {
       const metacode = Metamaps.findMetacodeByNameIdOrEmoji(message.text)
       if (metacode) {
         cb(null, metacode)
-      } else collect()
+      } else {
+        rtmBot.sendMessage(iT('en.buildingContext.collectMetacode.tryAgain'), facilitatorDM)
+        collect()
+      }
     })
   }
   collect()
@@ -203,18 +203,28 @@ function main (context, configuration, cb) {
   }
   Object.keys(dmIds).forEach(function (userId) {
     const wrappedHandler = apply(handleParticipantMessage, userId, dmIds[userId])
-    const canceler = listenInChannelTillCancel(context, dmIds[userId], wrappedHandler)
+    const canceler = listenInChannelTillCancel(context, facilitatorDM, wrappedHandler)
     participantCancellers.push(canceler)
   })
   // setup commands and event listeners for the facilitator
   function setTopic (id) {
     const existingTopic = topics.find(t => t.id === parseInt(id, 10))
     if (existingTopic) {
-      // TODO: also get metacode
-      rtmBot.sendMessage(iT('en.buildingContext.facilitatorSetTopic'), facilitatorDM)
-      focalTopic = existingTopic
-      Object.keys(dmIds).forEach(function (userId) {
-        rtmBot.sendMessage(iT('en.buildingContext.participantSetTopic', focalTopic), dmIds[userId])
+      collectMetacode(context, configuration, function (err, metacode) {
+        if (err) {
+          rtmBot.sendMessage(iT('en.buildingContext.facilitatorSetTopicError'), facilitatorDM)
+          return
+        }
+        rtmBot.sendMessage(iT('en.buildingContext.facilitatorSetTopic'), facilitatorDM)
+        focalTopic = existingTopic
+        selectedMetacode = metacode
+        Object.keys(dmIds).forEach(function (userId) {
+          rtmBot.sendMessage(iT('en.buildingContext.participantSetTopic', {
+            topicName: focalTopic.name,
+            metacodeEmoji: selectedMetacode[2],
+            metacodeName: selectedMetacode[0]
+          }), dmIds[userId])
+        })
       })
     } else {
       rtmBot.sendMessage(iT('en.buildingContext.facilitatorNoTopic'), facilitatorDM)
@@ -243,7 +253,16 @@ function main (context, configuration, cb) {
     if (message.text === 'end session') {
       end()
     } else if (message.text.startsWith('set topic ')) {
-      setTopic(message.text.slice(10))
+      let selectedTopic = message.text.slice(10)
+      // if its a link
+      if (selectedTopic.startsWith('<')) {
+        let selectedTopicParts = selectedTopic
+          .replace('<', '')
+          .replace('>','')
+          .split('/')
+        let selectedTopic = selectedTopicParts[selectedTopicParts.length - 1]
+      }
+      setTopic(selectedTopic)
     } else if (message.text.startsWith('set response type ')) {
       setMetacode(message.text.slice(18))
     } else if (message.text.startsWith('unset topic')) {
@@ -254,9 +273,8 @@ function main (context, configuration, cb) {
 
   // offer instructions to the facilitator
   // and inform that the participants have kicked off with the initial topic and responses
-  rtmBot.sendMessage(iT('en.buildingContext.facilitatorCommands'), facilitatorDM)
   rtmBot.sendMessage(iT('en.buildingContext.facilitatorExplain'), facilitatorDM)
-
+  rtmBot.sendMessage(iT('en.buildingContext.facilitatorCommands'), facilitatorDM)
 
   // offer the initial topic to the participants
   Object.keys(dmIds).forEach(function (userId) {
