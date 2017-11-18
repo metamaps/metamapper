@@ -194,7 +194,8 @@ function useOrCreateMap (context, config, cb) {
         cb(err)
         return
       }
-      cb(null, Object.assign({}, config, { linkedMap: map }))
+      const newConfig = Object.assign({}, config, { linkedMap: map })
+      cb(null, newConfig)
     })
   } else {
     cb(null, config)

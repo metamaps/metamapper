@@ -58,7 +58,6 @@ function collectWhenTopics (context, config, cb) {
         name: message.text,
         permission
       }
-      console.log('id-topic-token', id, topic, !!tokens[user])
       addTopicToMap(id, topic, tokens[user], function (err, t) {
         if (err) {
           cb(err)
@@ -84,13 +83,12 @@ function collectWhenNoTopics (context, config, cb) {
       name: message.text,
       permission
     }
-    console.log('id-topic-token', id, topic, !!tokens[user])
     addTopicToMap(id, topic, tokens[user], function (err, t) {
       if (err) {
         cb(err)
         return
       }
-      config.linkedMap.topics.push(t)
+      config.linkedMap.topics = [t]
       cb(null, t)
     })
   })

@@ -385,12 +385,12 @@ module.exports = function (
       },
       run: function (message) {
         const mapName = message.text.substring(11)
-        Metamaps.createMap(mapName, tokens[message.user], function (err, mapId) {
+        Metamaps.createMap(mapName, tokens[message.user], function (err, map) {
           if (err) {
             return rtm.sendMessage('there was an error creating the map', message.channel)
           }
-          setChannelSetting(message.channel, 'map', mapId)
-          web.chat.postMessage(message.channel, 'Channel is set to new map: ' + linkWithMapName(mapId, mapName) + ' (ID: ' + mapId + ')')
+          setChannelSetting(message.channel, 'map', map.id)
+          web.chat.postMessage(message.channel, 'Channel is set to new map: ' + linkWithMapName(map.id, mapName) + ' (ID: ' + map.id + ')')
         })
       }
     },

@@ -340,7 +340,7 @@ module.exports = {
         return callback('creating map failed')
       }
       var body = JSON.parse(body)
-      callback(null, body)
+      callback(null, body.data)
     })
   },
   formatTopicsForDisplay: function (topics, withId) {
