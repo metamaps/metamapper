@@ -146,12 +146,21 @@ function collectMap (context, cb) {
 module.exports.collectMap = collectMap
 
 
+function getMembersForChannel (context, channel, cb) {
+  const { webBot } = context
+  webBot.channels.info(channel, function (err, info) {
+    if (err) {
+      cb(err)
+      return
+    }
+    cb(null, info.channel.members)
+  })
+}
+module.exports.getMembersForChannel = getMembersForChannel
+
 function collectParticipants (context, cb) {
-  // TODO: exclude the facilitator from
-  // possibly being included in the participants
-  const { rtmBot, facilitatorDM } = context
+  const { rtmBot, facilitatorDM, user } = context
   rtmBot.sendMessage(iT('en.session.collectParticipants.explain'), facilitatorDM)
-  // loop without re-explaining
   function collect () {
     listenInChannel(rtmBot, facilitatorDM, function (err, message) {
       if (err) {
@@ -162,18 +171,44 @@ function collectParticipants (context, cb) {
         cb('restart')
         return
       }
-      const pattern = new RegExp(/<@(.*?)>/g)
-      const participantIds = []
-      var match = null;
-      while (match = pattern.exec(message.text)) {
-        participantIds.push(match[1])
+      const channelIdMatch = new RegExp(/<#(.*?)\|/).exec(message.text)
+      const channelId = channelIdMatch && channelIdMatch[1]
+      let participantIds = []
+      // means they @ mentioned people
+      if (!channelId) {
+        const pattern = new RegExp(/<@(.*?)>/g)
+        var match = null;
+        while (match = pattern.exec(message.text)) {
+          participantIds.push(match[1])
+        }
+        complete()
+      // means they referenced a channel
+      } else {
+        getMembersForChannel(context, channelId, function (err, members) {
+          if (err) {
+            rtmBot.sendMessage(iT('en.session.collectParticipants.failure'), facilitatorDM)
+            collect()
+            return
+          }
+          participantIds = members
+          complete()
+        })
       }
-      if (!participantIds.length) {
-        rtmBot.sendMessage(iT('en.session.collectParticipants.tryAgain'), facilitatorDM)
-        collect()
-        return
+      function complete() {
+        if (!participantIds.length) {
+          rtmBot.sendMessage(iT('en.session.collectParticipants.tryAgain'), facilitatorDM)
+          collect()
+          return
+        }
+        if (participantIds.indexOf(user) > -1) {
+          // pull the facilitator back out of the participants list
+          if (!channelId) {
+            rtmBot.sendMessage(iT('en.session.collectParticipants.tryAgain'), facilitatorDM)
+          }
+          participantIds = participantIds.filter(p => p !== user)
+        }
+        cb(null, participantIds)
       }
-      cb(null, participantIds)
     })
   }
   collect()

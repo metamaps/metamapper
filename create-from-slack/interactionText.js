@@ -33,8 +33,9 @@ Let’s start.`,
         acknowledgeMap: `Ok. Session is linked to map *${v.mapName}*.`
       },
       collectParticipants: {
-        explain: 'Use the @ symbol to mention the people to include in the session.',
-        tryAgain: 'You didn\'t mention anyone to include. Try again.'
+        explain: 'There are two ways to select people to include in the session: \n1. Use the @ symbol and mention people\n2. Type # and then a channel name and include everyone in a channel',
+        tryAgain: 'You didn\'t input a channel, nor mention anyone to include. Try again.',
+        failure: 'There was an error fetching people for that channel. Try again.',
       },
       startOrCancel: {
         explain: 'The session is all set. Type `start` to begin, `restart` to reconfigure, or `cancel` to exit.',
