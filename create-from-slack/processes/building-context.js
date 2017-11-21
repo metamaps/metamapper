@@ -154,7 +154,8 @@ function main (context, configuration, cb) {
   const stats = {
     counts: {
       generatedTopics: 0
-    }
+    },
+    generated: []
   }
   // these are not consts because they will change as the
   // facilitator updates the session
@@ -175,6 +176,10 @@ function main (context, configuration, cb) {
       permission,
       metacode_id: selectedMetacode[1]
     }
+    stats.generated.push({
+      topic: message.text,
+      metacode: selectedMetacode
+    })
     addTopicToMap(id, topic, tokens[userId], function (err, t) {
       if (err) {
         rtmBot.sendMessage('There was an error creating that topic', err)
@@ -292,6 +297,10 @@ module.exports.main = main
 
 
 function formatResults (results, cb) {
-  cb(null, `generated ${results.counts.generatedTopics} topics`)
+  let string = `This session generated ${results.counts.generatedTopics} topics:\n`
+  results.generated.forEach(res => {
+    string += `:${res.metacode[2]}: ${res.topic}\n`
+  })
+  cb(null, string)
 }
 module.exports.formatResults = formatResults
