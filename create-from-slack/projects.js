@@ -84,7 +84,8 @@ module.exports = {
       // look for a node on the map with the user name of the user
       // if there isn't one, create it, if there is one, use that
       // talk to that person to figure out what they're working on
-      dmForUserId(context, userId, dm => {
+      dmForUserId(context, userId, (err, dm) => {
+        // TODO: handle error
         var name = userNameForUserId(context, userId)
         var removedProjects = []
         var projects = []
