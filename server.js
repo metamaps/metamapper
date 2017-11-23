@@ -7,6 +7,7 @@ var request = require('request')
 var mongoose = require('mongoose')
 var express = require('express')
 var bodyParser = require('body-parser')
+var path = require("path");
 var app = express()
 app.use(bodyParser.json())
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
@@ -132,6 +133,13 @@ db.once('open', function() {
     res.send('metamapper! ' + addToSlack)
   })
 
+  app.get('/authed', function (req, res) {
+    res.sendFile(path.join(__dirname+'/pages/user-authenticated.html'));
+  })
+  app.get('/added-to-team', function (req, res) {
+    res.sendFile(path.join(__dirname+'/pages/added-to-team.html'));
+  })
+
   app.get(authRoute, function (req, res) {
     var redirect = metamapsSignInUrl + '?client_id=' + METAMAPS_CLIENT_ID + '&response_type=code&redirect_uri=' + encodeURIComponent(metamapsRedirectUri + '?id=' + req.query.id)
     res.redirect(redirect)
@@ -167,7 +175,7 @@ db.once('open', function() {
         })
         token.save()
         bots[teamId].addTokenForUser(userId, body.access_token)
-        res.send('ok, you can now make use of metamapper authenticated as yourself!') // do a redirect here
+        res.sendFile(path.join(__dirname+'/pages/user-authenticated.html'));
         mmApi.getMyId(body.access_token, (err, id) => {
           if (err) {
             console.log('error fetching id for user')
@@ -209,7 +217,7 @@ db.once('open', function() {
         })
         team.save()
         startBotForTeam(team)
-        res.send('ok, the metamapper has been added for your team') // do a redirect here
+        res.sendFile(path.join(__dirname+'/pages/added-to-team.html'));
       })
   })
 
