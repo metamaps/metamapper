@@ -433,7 +433,7 @@ module.exports = function (
     {
       cmd: "start ",
       variable: "[SESSION_TYPE]",
-      inHelpList: true,
+      inHelpList: false,
       helpText: "TODO: write this",
       requireUser: true,
       check: function (message) {
