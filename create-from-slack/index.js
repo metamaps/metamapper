@@ -33,7 +33,11 @@ function setup (team, setProjectMap, authUrl, persistChannelSetting) {
         dataStore,
         webBot
       }
-      dmForUserId(context, message.user, dmId => {
+      dmForUserId(context, message.user, (err, dmId) => {
+        if (err) {
+          console.log(err)
+          return
+        }
         rtmBot.sendMessage('You haven\'t authenticated yet, please go to ' + authUrl + '?id=' + id, dmId)
       })
       return false
@@ -65,7 +69,11 @@ function setup (team, setProjectMap, authUrl, persistChannelSetting) {
         dataStore,
         webBot
       }
-      dmForUserId(context, userId, dmId => {
+      dmForUserId(context, userId, (err, dmId) => {
+        if (err) {
+          console.log(err)
+          return
+        }
         rtmBot.sendMessage('Nice! You are now authorized with metamaps.', dmId)
       })
     },
