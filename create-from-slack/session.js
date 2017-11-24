@@ -207,6 +207,8 @@ function collectParticipants (context, cb) {
           }
           participantIds = participantIds.filter(p => p !== user)
         }
+        // filter out bot
+        participantIds = participantIds.filter(p => p !== rtmBot.activeUserId)
         cb(null, participantIds)
       }
     })
