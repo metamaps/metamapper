@@ -147,7 +147,7 @@ module.exports.configure = configure
 
 
 function main (context, configuration, cb) {
-  const { rtmBot, dmIds, facilitatorDM, tokens } = context
+  const { rtmBot, dmIds, facilitatorDM, tokens, user } = context
   const { linkedMap: { id, topics, permission } } = configuration
   const participantCancellers = []
   // track stats for this session
@@ -210,17 +210,18 @@ function main (context, configuration, cb) {
     participantCancellers.push(canceler)
   })
   // setup commands and event listeners for the facilitator
-  function setTopic (id) {
-    const existingTopic = topics.find(t => t.id === parseInt(id, 10))
-    if (existingTopic) {
-      collectMetacode(context, configuration, function (err, metacode) {
-        if (err) {
-          rtmBot.sendMessage(iT('en.buildingContext.facilitatorSetTopicError'), facilitatorDM)
-          return
-        }
-        rtmBot.sendMessage(iT('en.buildingContext.facilitatorSetTopic'), facilitatorDM)
-        focalTopic = existingTopic
+  function setTopic (idOrText) {
+    const parsedInt = parseInt(idOrText, 10)
+    const existingTopic = topics.find(t => t.id === parsedInt)
+    collectMetacode(context, configuration, function (err, metacode) {
+      if (err) {
+        rtmBot.sendMessage(iT('en.buildingContext.facilitatorSetTopicError'), facilitatorDM)
+        return
+      }
+      function complete(topic) {
+        focalTopic = topic
         selectedMetacode = metacode
+        rtmBot.sendMessage(iT('en.buildingContext.facilitatorSetTopic'), facilitatorDM)
         Object.keys(dmIds).forEach(function (userId) {
           rtmBot.sendMessage(iT('en.buildingContext.participantSetTopic', {
             topicName: focalTopic.name,
@@ -228,10 +229,25 @@ function main (context, configuration, cb) {
             metacodeName: selectedMetacode[0]
           }), dmIds[userId])
         })
-      })
-    } else {
-      rtmBot.sendMessage(iT('en.buildingContext.facilitatorNoTopic'), facilitatorDM)
-    }
+      }
+      if (existingTopic) {
+        complete(existingTopic)
+      } else {
+        const topic = {
+          name: idOrText,
+          permission
+        }
+        addTopicToMap(id, topic, tokens[user], function (err, t) {
+          if (err) {
+            rtmBot.sendMessage('There was an error creating that topic', facilitatorDM)
+            return
+          }
+          configuration.linkedMap.topics.push(t)
+          complete(t)
+        })
+      }
+    })
+
   }
   function setMetacode (name) {
     const metacode = Metamaps.findMetacodeByNameIdOrEmoji(name)
@@ -263,6 +279,7 @@ function main (context, configuration, cb) {
           .replace('<', '')
           .replace('>','')
           .split('/')
+        // get the topic ID which is the last part
         selectedTopic = selectedTopicParts[selectedTopicParts.length - 1]
       }
       setTopic(selectedTopic)
