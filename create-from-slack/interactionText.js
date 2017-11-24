@@ -35,7 +35,7 @@ Let’s start.`,
       collectParticipants: {
         explain: 'There are two ways to select people to include in the session: \n1. Use the @ symbol and mention people\n2. Type # and then a channel name and include everyone in a channel',
         tryAgain: 'You didn\'t input a channel, nor mention anyone to include. Try again.',
-        failure: 'There was an error fetching people for that channel. Try again.',
+        failure: 'There was an error fetching people for that channel. Try again.'
       },
       startOrCancel: {
         explain: 'The session is all set. Type `start` to begin, `restart` to reconfigure, or `cancel` to exit.',
@@ -77,7 +77,7 @@ They'll guide the process and be able to communicate messages to you throughout.
       facilitatorSetMetacode: `Ok, informing participants to now respond with: :${v[2]}: ${v[0]}`,
       facilitatorNoMetacode: 'There is no metacode with that name.',
       facilitatorExplain: 'The participants have been asked to respond to your initial topic.',
-      facilitatorCommands: 'The following commands can be used to steer the session\n`set topic [ID]-OR-[TOPIC_URL]` to switch topics\n`set response type [NAME]` to switch response types\n`unset topic` to disable responses\n`end session` to close the session completely',
+      facilitatorCommands: 'The following commands can be used to steer the session\n`set topic [ID]-OR-[TOPIC_URL]-OR-[NEW_NAME]` to switch topics\n`set response type [NAME]` to switch response types\n`unset topic` to disable responses\n`end session` to close the session completely',
       participantInitialTopic: `The first topic we\'ll think about is: \n> ${v.name}`,
       participantInitialMetacode: `The facilitator is inviting :${v[2]}: ${v[0]} responses. Respond with your own ${v[0]} just by typing them in here and sending them.`,
     }

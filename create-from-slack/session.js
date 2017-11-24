@@ -159,7 +159,7 @@ function getMembersForChannel (context, channel, cb) {
 module.exports.getMembersForChannel = getMembersForChannel
 
 function collectParticipants (context, cb) {
-  const { rtmBot, facilitatorDM, user } = context
+  const { rtmBot, facilitatorDM, user, tokens } = context
   rtmBot.sendMessage(iT('en.session.collectParticipants.explain'), facilitatorDM)
   function collect () {
     listenInChannel(rtmBot, facilitatorDM, function (err, message) {
@@ -195,17 +195,14 @@ function collectParticipants (context, cb) {
         })
       }
       function complete() {
+        // filter out facilitator
+        // filter out bot
+        // filter out users who haven't linked their metamaps account
+        participantIds = participantIds.filter(p => p !== user && p !== rtmBot.activeUserId && tokens[p])
         if (!participantIds.length) {
           rtmBot.sendMessage(iT('en.session.collectParticipants.tryAgain'), facilitatorDM)
           collect()
           return
-        }
-        if (participantIds.indexOf(user) > -1) {
-          // pull the facilitator back out of the participants list
-          if (!channelId) {
-            rtmBot.sendMessage(iT('en.session.collectParticipants.tryAgain'), facilitatorDM)
-          }
-          participantIds = participantIds.filter(p => p !== user)
         }
         cb(null, participantIds)
       }
