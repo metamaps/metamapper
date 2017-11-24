@@ -47,7 +47,7 @@ function setup (team, setProjectMap, authUrl, persistChannelSetting) {
 
   rtmBot.on(RTM_EVENTS.MESSAGE, function (message) {
     if (!message.text) return
-
+    console.log('user: ' + message.user + ', message: ' + message.text)
     var ran
     SLACK.COMMANDS.forEach(function (command) {
       if (!ran &&
