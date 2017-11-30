@@ -1,59 +1,46 @@
 if (process.env.NODE_ENV !== 'production') require('dotenv').config()
-var SLACK_CLIENT_ID = process.env.SLACK_CLIENT_ID
-var SLACK_CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET
-var METAMAPS_CLIENT_ID = process.env.METAMAPS_CLIENT_ID
-var METAMAPS_CLIENT_SECRET = process.env.METAMAPS_CLIENT_SECRET
-var request = require('request')
-var mongoose = require('mongoose')
-var express = require('express')
-var bodyParser = require('body-parser')
-var path = require("path");
-var app = express()
+const SLACK_CLIENT_ID = process.env.SLACK_CLIENT_ID
+const SLACK_CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET
+const METAMAPS_CLIENT_ID = process.env.METAMAPS_CLIENT_ID
+const METAMAPS_CLIENT_SECRET = process.env.METAMAPS_CLIENT_SECRET
+const request = require('request')
+const mongoose = require('mongoose')
+const express = require('express')
+const bodyParser = require('body-parser')
+const path = require("path");
+const app = express()
 app.use(bodyParser.json())
-var urlencodedParser = bodyParser.urlencoded({ extended: false })
+const urlencodedParser = bodyParser.urlencoded({ extended: false })
 
-var authRoute = '/sign_in'
-var fullUrl = process.env.PROTOCOL + '://' + process.env.DOMAIN
-var authUrl = fullUrl + authRoute
-var METAMAPS_URL = process.env.METAMAPS_URL
+const authRoute = '/sign_in'
+const fullUrl = process.env.PROTOCOL + '://' + process.env.DOMAIN
+const authUrl = fullUrl + authRoute
+const METAMAPS_URL = process.env.METAMAPS_URL
 const mmApi = require('./create-from-slack/metamaps')
-var metamapsSignInUrl = METAMAPS_URL + '/oauth/authorize'
-var metamapsTokenUrl = METAMAPS_URL + '/oauth/token'
-var metamapsOauthRoute = '/metamaps/confirm'
-var metamapsRedirectUri = fullUrl + metamapsOauthRoute
-var slackTokenUrl = 'https://slack.com/api/oauth.access'
-var metamapBot = require('./create-from-slack')
+const metamapsSignInUrl = METAMAPS_URL + '/oauth/authorize'
+const metamapsTokenUrl = METAMAPS_URL + '/oauth/token'
+const metamapsOauthRoute = '/metamaps/confirm'
+const metamapsRedirectUri = fullUrl + metamapsOauthRoute
+const slackTokenUrl = 'https://slack.com/api/oauth.access'
+const metamapBot = require('./create-from-slack')
 const { handleInteractiveResponse } = require('./interactiveMessagesManager.js')
-var bots = {} // will store the bot instances that are running
+const bots = {} // will store the bot instances that are running
+
+// import DB models
+// Teams defined which teams have been workspaces have been configured to work with Metamapper
+const Team = require('./models/Team')
+// Tokens store authentication info for Metamaps associated with slack user accounts !!these should get encrypted/decrypted
+const Token = require('./models/Token')
+// ChannelSettings store configuration options for channels
+const ChannelSetting = require('./models/ChannelSetting')
+
+// make sure that you configure the DB environment variable with a valid mongodb url
 mongoose.connect(process.env.DB)
 
 var db = mongoose.connection
 db.on('error', console.error.bind(console, 'connection error:'))
 db.once('open', function() {
   // we're connected!
-
-  var Team = mongoose.model('Team', {
-    access_token: String,
-    team_name: String,
-    team_id: String,
-    bot_user_id: String,
-    bot_access_token: String,
-    project_map_id: String
-  })
-  var Token = mongoose.model('Token', {
-    access_token: String,
-    key: String,
-    mm_user_id: String,
-    user_id: String,
-    team_id: String
-  })
-  var ChannelSetting = mongoose.model('ChannelSetting', {
-    metacode_id: Number,
-    map_id: String,
-    capture: Boolean, // whether to capture every message or not
-    channel_id: String,
-    team_id: String
-  })
 
   // Initialize
   Team.find(function (err, teams) {
