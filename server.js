@@ -115,11 +115,15 @@ db.once('open', function() {
     bots[team.get('team_id')] = metamapBot.setup(toPassIn, persistProjectMap, authUrl, persistChannelSetting)
   }
 
+  // This is the home route. Needs work, but provides a link for
+  // adding Metamapper to your slack team
   app.get('/', function (req, res) {
     var addToSlack = `<a href="https://slack.com/oauth/authorize?&client_id=${SLACK_CLIENT_ID}&redirect_uri=${fullUrl}/slack/confirm&scope=bot,commands,channels:history,channels:read,channels:write,chat:write:bot,emoji:read,groups:history,groups:read,groups:write,im:history,im:read,im:write,links:read,links:write,mpim:history,mpim:read,mpim:write,reactions:read,reactions:write,team:read,users:read"><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>`
     res.send('metamapper! ' + addToSlack)
   })
 
+
+  // These two routes are simply for testing/developing the HTML pages
   app.get('/authed', function (req, res) {
     res.sendFile(path.join(__dirname+'/pages/user-authenticated.html'));
   })
@@ -127,55 +131,66 @@ db.once('open', function() {
     res.sendFile(path.join(__dirname+'/pages/added-to-team.html'));
   })
 
+  // This is the route that a user navigates initially to, to verify their chat account with Metamaps
+  // so it just redirects to metamaps
   app.get(authRoute, function (req, res) {
     var redirect = metamapsSignInUrl + '?client_id=' + METAMAPS_CLIENT_ID + '&response_type=code&redirect_uri=' + encodeURIComponent(metamapsRedirectUri + '?id=' + req.query.id)
     res.redirect(redirect)
   })
-  app.get(metamapsOauthRoute, function (req, res) {
-      var code = req.query.code
-      var key = req.query.id
-      var userId = key.substring(9)
-      var teamId = key.slice(0, 9)
-      var redirect_uri = process.env.PROTOCOL + '://' + process.env.DOMAIN + req.path + '?id=' + key
-      var options = {
-        uri: metamapsTokenUrl,
-        form: {
-          client_id: METAMAPS_CLIENT_ID,
-          client_secret: METAMAPS_CLIENT_SECRET,
-          code: code,
-          redirect_uri: redirect_uri,
-          grant_type: 'authorization_code'
-        }
-      }
-      request.post(options, function (err, response, body) {
-        if (err) {
-          console.log(err)
-          return // redirect and show error
-        }
-        body = JSON.parse(body)
-        if (!body.access_token) return res.send('There was an error')
-        var token = new Token({
-          access_token: body.access_token,
-          key: key,
-          user_id: userId,
-          team_id: teamId
-        })
-        token.save()
-        bots[teamId].addTokenForUser(userId, body.access_token)
-        res.sendFile(path.join(__dirname+'/pages/user-authenticated.html'));
-        mmApi.getMyId(body.access_token, (err, id) => {
-          if (err) {
-            console.log('error fetching id for user')
-            return
-          }
-          token.set('mm_user_id', id.toString())
-          token.save()
-          bots[teamId].addMmUserId(token.get('mm_user_id'), token.get('user_id'))
-        })
-      })
 
+  // This is the route that Metamaps redirects back to once user authorizes our service to access that account
+  app.get(metamapsOauthRoute, function (req, res) {
+    var code = req.query.code
+    var key = req.query.id
+    var userId = key.substring(9)
+    var teamId = key.slice(0, 9)
+    var redirect_uri = process.env.PROTOCOL + '://' + process.env.DOMAIN + req.path + '?id=' + key
+    // Metamaps uses the multi-step Oauth2 authorization flow
+    var options = {
+      uri: metamapsTokenUrl,
+      form: {
+        client_id: METAMAPS_CLIENT_ID,
+        client_secret: METAMAPS_CLIENT_SECRET,
+        code: code,
+        redirect_uri: redirect_uri,
+        grant_type: 'authorization_code'
+      }
+    }
+    // make the request to Metamaps with the authorization code to get a token for the user
+    request.post(options, function (err, response, body) {
+      if (err) {
+        console.log(err)
+        return // redirect and show error
+      }
+      body = JSON.parse(body)
+      if (!body.access_token) return res.send('There was an error')
+      // Store the token for that user TODO: encrypt it!
+      var token = new Token({
+        access_token: body.access_token,
+        key: key,
+        user_id: userId,
+        team_id: teamId
+      })
+      token.save()
+      // In addition to saving it to the database, add it to the running version
+      bots[teamId].addTokenForUser(userId, body.access_token)
+      // At this point, we consider it successful and respond with the HTML page
+      res.sendFile(path.join(__dirname+'/pages/user-authenticated.html'));
+      // now just to save it in the database, we go back to the Metamaps API and fetch the user ID
+      mmApi.getMyId(body.access_token, (err, id) => {
+        if (err) {
+          console.log('error fetching id for user')
+          return
+        }
+        token.set('mm_user_id', id.toString())
+        token.save()
+        bots[teamId].addMmUserId(token.get('mm_user_id'), token.get('user_id'))
+      })
+    })
   })
 
+  // This is the route that Slack redirects to in order to complete the process
+  // of adding Metamapper to your team
   app.get('/slack/confirm', function (req, res) {
       var code = req.query.code
       var redirect_uri = fullUrl + req.path
@@ -188,13 +203,13 @@ db.once('open', function() {
           redirect_uri: redirect_uri
         }
       }
-
       request.post(options, function (err, response, body) {
         if (err) {
           console.log(err)
           return // redirect and show error
         }
         body = JSON.parse(body)
+        // Save this new team to the DB
         var team = new Team({
           access_token: body.access_token,
           team_name: body.team_name,
@@ -203,18 +218,26 @@ db.once('open', function() {
           bot_access_token: body.bot.bot_access_token
         })
         team.save()
+        // boot up the bot in the new team right away
         startBotForTeam(team)
+        // respond with the success "bot added to workspace" page
         res.sendFile(path.join(__dirname+'/pages/added-to-team.html'));
       })
   })
 
+
+  // This is route that slack should be configured to post interactive message responses to
   app.post('/slack/interactive-messages', urlencodedParser, function (req, res) {
     res.status(200).end()
-    // todo: check verification code
+    // TODO: check verification code!
     const payload = JSON.parse(req.body.payload)  // parse URL-encoded payload JSON string
     handleInteractiveResponse(payload, res)
   })
 
+
+
+  // This is a random endpoint that is currently being used by Robert Best
+  // TODO: factor this out!
   app.post('/slack-special-endpoint-123', function (req, res) {
     /* Example slack data from nuzzel links
     { token: 'nlbSeAI84dZeYDbvlewO4Wg9',
@@ -255,7 +278,6 @@ db.once('open', function() {
 
 
     // acknowledge that we've received the message from slack
-    //The magic happens here
     if (req.body.challenge) res.send(req.body.challenge)
     else res.send('ok')
 
