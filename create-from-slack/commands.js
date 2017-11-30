@@ -7,15 +7,12 @@ const iT = require('./interactionText.js')
 const Metamaps = require('./metamaps.js')
 const session = require('./session.js')
 const processes = require('./processes')
-const projects = require('./projects.js')
 
 module.exports = function (
   tokens,
   users,
   botId,
   signInUrl,
-  projectMapId,
-  setProjectMap,
   channelSettings,
   persistChannelSetting,
   teamName) {
@@ -103,8 +100,6 @@ module.exports = function (
     return channelSettings[channel][property]
   }
 
-  if (projectMapId) projects.setProjectMapId(projectMapId)
-
   function postTopicsToMetamaps(topics, userId, channel, timestamp) {
     var addToMap = getChannelSetting(channel, 'map') // returns the id
     if (!addToMap) {
@@ -164,22 +159,6 @@ module.exports = function (
             .then(() => web.reactions.add('zap', {channel: channel, timestamp: timestamp}))
         }
       })
-    })
-  }
-
-  function setLocalProjectMap (mapId, channel) {
-    projectMapId = mapId // set within this function
-    projects.setProjectMapId(mapId) // update the projects module
-    setProjectMap(mapId) // save to database
-    rtm.sendMessage('Map for projects was updated', channel)
-  }
-
-  function createMapForProjects(token, channel) {
-    Metamaps.createMap(teamName + " Projects", token, function (err, id) {
-      if (!err) {
-        setLocalProjectMap(id, channel)
-        rtm.sendMessage('You can now use the projects functionality', channel)
-      }
     })
   }
 

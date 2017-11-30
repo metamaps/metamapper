@@ -9,8 +9,8 @@ const { dmForUserId } = require('./clientHelpers.js')
 const commands = require('./commands.js')
 
 
-function setup (team, setProjectMap, authUrl, persistChannelSetting) {
-  const { name, accessToken, tokens, mmUserIds, botToken, botId, projectMapId } = team
+function setup (team, authUrl, persistChannelSetting) {
+  const { name, accessToken, tokens, mmUserIds, botToken, botId } = team
   const users = {}
   const dataStore = new DataStore()
   // the "App" has different (greater) permissions than the bot
@@ -21,7 +21,7 @@ function setup (team, setProjectMap, authUrl, persistChannelSetting) {
   setClientsForTeam(name, dataStore, webApp, webBot, rtmBot)
   rtmBot.start()
 
-  const SLACK = commands(tokens, users, botId, authUrl, projectMapId, setProjectMap,
+  const SLACK = commands(tokens, users, botId, authUrl,
     team.channelSettings,
     persistChannelSetting,
     team.name)
