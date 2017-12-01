@@ -20,14 +20,14 @@ module.exports = function (
   const clients = getClientsForTeam(teamName)
   const dataStore = clients.dataStore
   const teamWebClient = clients.webApp
-  const web = clients.webBot
-  const rtm = clients.rtmBot
+  const webBot = clients.webBot
+  const rtmBot = clients.rtmBot
 
   var metacodes = Metamaps.metacodes
 
   const getArchiveLink = (channelId, messageId) => {
-    const teamDomain = rtm.dataStore.teams[rtm.activeTeamId].domain
-    const channelIsh = rtm.dataStore.getChannelGroupOrDMById(channelId)
+    const teamDomain = rtmBot.dataStore.teams[rtmBot.activeTeamId].domain
+    const channelIsh = rtmBot.dataStore.getChannelGroupOrDMById(channelId)
     let channelName
     if (channelIsh._modelName === 'Channel') {
       channelName = channelIsh.name
@@ -57,7 +57,7 @@ module.exports = function (
       if (err || !topic) {
         if (err) console.log(err)
         setMessageChannelPerson(channelId, personId, null)
-        web.reactions.add('exclamation', {channel: channelId, timestamp: messageId})
+        webBot.reactions.add('exclamation', {channel: channelId, timestamp: messageId})
         return
       }
       messagesTopics[channelId + messageId] = topic.id // add it to the cache
@@ -103,7 +103,7 @@ module.exports = function (
   function postTopicsToMetamaps(topics, userId, channel, timestamp) {
     var addToMap = getChannelSetting(channel, 'map') // returns the id
     if (!addToMap) {
-      rtm.sendMessage('There\'s no map set for this channel, use *set map*', channel)
+      rtmBot.sendMessage('There\'s no map set for this channel, use *set map*', channel)
     }
     topics.forEach(topic => {
       // first: use the metacode_id provided if there is one
@@ -128,9 +128,9 @@ module.exports = function (
       Metamaps.addTopicToMap(addToMap, topic, tokens[userId], function (err, topicId, mappingId) {
         let createSynapse
         if (err == 'topic failed') {
-          rtm.sendMessage('failed to create your topic', channel)
+          rtmBot.sendMessage('failed to create your topic', channel)
         } else if (err == 'mapping failed') {
-          rtm.sendMessage('successfully created topic (id: ' + topicId + '), but failed to add it to map ' + addToMap, channel)
+          rtmBot.sendMessage('successfully created topic (id: ' + topicId + '), but failed to add it to map ' + addToMap, channel)
         } else {
           createSynapse = () => {
             const synapseInfo = getTopicChannelPerson(channel, userId)
@@ -146,7 +146,7 @@ module.exports = function (
               Metamaps.addSynapseToMap(addToMap, synapse, tokens[userId], (err, synapseId, mappingId) => {
                 if (err) {
                   console.log(err)
-                  web.reactions.add('exclamation', {channel: channel, timestamp: timestamp})
+                  webBot.reactions.add('exclamation', {channel: channel, timestamp: timestamp})
                 }
               })
               setMessageChannelPerson(channel, userId, null) // reset
@@ -155,8 +155,8 @@ module.exports = function (
           }
           createSynapse()
           console.log(channel)
-          web.reactions.add(emoji, {channel: channel, timestamp: timestamp})
-            .then(() => web.reactions.add('zap', {channel: channel, timestamp: timestamp}))
+          webBot.reactions.add(emoji, {channel: channel, timestamp: timestamp})
+            .then(() => webBot.reactions.add('zap', {channel: channel, timestamp: timestamp}))
         }
       })
     })
@@ -178,11 +178,11 @@ module.exports = function (
       },
       run: function (message) {
         if (!getChannelSetting(message.channel, 'map')) {
-          rtm.sendMessage('You need to set a map for this channel first. Use \'set map\' or \'create map\'', message.channel)
+          rtmBot.sendMessage('You need to set a map for this channel first. Use \'set map\' or \'create map\'', message.channel)
           return
         }
         setChannelSetting(message.channel, 'capture', true)
-        rtm.sendMessage('Ok, I will capture every message to map ' + getChannelSetting(message.channel, 'map') + ' until you type \'stop capture\'', message.channel)
+        rtmBot.sendMessage('Ok, I will capture every message to map ' + getChannelSetting(message.channel, 'map') + ' until you type \'stop capture\'', message.channel)
       }
     },
     {
@@ -196,11 +196,11 @@ module.exports = function (
       },
       run: function (message) {
         if (!getChannelSetting(message.channel, 'capture')) {
-          rtm.sendMessage('You weren\'t capturing anywho!', message.channel)
+          rtmBot.sendMessage('You weren\'t capturing anywho!', message.channel)
           return
         }
         setChannelSetting(message.channel, 'capture', false)
-        rtm.sendMessage('Ok, I\'ve stopped capturing every message to the map', message.channel)
+        rtmBot.sendMessage('Ok, I\'ve stopped capturing every message to the map', message.channel)
       }
     },
     {
@@ -214,28 +214,28 @@ module.exports = function (
       },
       run: function (message) {
         if (tokens[message.user]) {
-          rtm.sendMessage('Yes, you\'re signed in to metamaps.', message.channel)
+          rtmBot.sendMessage('Yes, you\'re signed in to metamaps.', message.channel)
         } else {
-          rtm.sendMessage(iT('en.signedIn.notSignedIn'), message.channel)
+          rtmBot.sendMessage(iT('en.signedIn.notSignedIn'), message.channel)
           const channelIsh = dataStore.getChannelGroupOrDMById(message.channel)
           // if not a one-on-one DM, move to one-on-one DM with that user for signing in
           if (channelIsh._modelName !== 'DM') {
-            rtm.sendMessage(iT('en.signedIn.moveToDM'), message.channel)
+            rtmBot.sendMessage(iT('en.signedIn.moveToDM'), message.channel)
           }
           const context = {
             dataStore,
-            webBot: web
+            webBot: webBot
           }
           dmForUserId(context, message.user, function (err, dm) {
             if (err) {
-              rtm.sendMessage('There was an error messaging you in a DM', message.channel)
+              rtmBot.sendMessage('There was an error messaging you in a DM', message.channel)
               return
             }
             const iTvars = {
               signInUrl,
-              id: rtm.activeTeamId + message.user
+              id: rtmBot.activeTeamId + message.user
             }
-            rtm.sendMessage(iT('en.signedIn.signIn', iTvars), dm)
+            rtmBot.sendMessage(iT('en.signedIn.signIn', iTvars), dm)
           })
         }
       }
@@ -255,9 +255,9 @@ module.exports = function (
           var page = parseInt(message.text.substring(7)) || 1
           Metamaps.getMyMaps(userid, page, tokens[message.user], function (err, maps, pageData) {
             if (err) {
-              return rtm.sendMessage('there was an error retrieving your maps', message.channel)
+              return rtmBot.sendMessage('there was an error retrieving your maps', message.channel)
             }
-            web.chat.postMessage(message.channel, Metamaps.formatMapsForDisplay(maps, pageData) + '\n')
+            webBot.chat.postMessage(message.channel, Metamaps.formatMapsForDisplay(maps, pageData) + '\n')
           })
         }
 
@@ -286,13 +286,13 @@ module.exports = function (
         setChannelSetting(message.channel, 'map', id)
 
         if (!id) {
-          return rtm.sendMessage('There was an error in setting your map. (ID Issue)', message.channel)
+          return rtmBot.sendMessage('There was an error in setting your map. (ID Issue)', message.channel)
         }
         Metamaps.getMap(id, tokens[message.user], function (err, map) {
           if (err) {
-            return rtm.sendMessage('There was an error in setting your map. (Fetch Issue)', message.channel)
+            return rtmBot.sendMessage('There was an error in setting your map. (Fetch Issue)', message.channel)
           }
-          web.chat.postMessage(message.channel, 'The current map is now set to: ' + linkWithMapName(id, map.name) + ' (ID: ' + id + ')')
+          webBot.chat.postMessage(message.channel, 'The current map is now set to: ' + linkWithMapName(id, map.name) + ' (ID: ' + id + ')')
         })
       }
     },
@@ -308,13 +308,13 @@ module.exports = function (
       run: function (message) {
         var id = getChannelSetting(message.channel, 'map')
         if (!id) {
-          return rtm.sendMessage('There is no map set for this channel', message.channel)
+          return rtmBot.sendMessage('There is no map set for this channel', message.channel)
         }
         Metamaps.getMap(id, tokens[message.user], function (err, map) {
           if (err) {
-            return rtm.sendMessage('There was an error fetching the map for this channel', message.channel)
+            return rtmBot.sendMessage('There was an error fetching the map for this channel', message.channel)
           }
-          web.chat.postMessage(message.channel, 'The current map is ' + linkWithMapName(id, map.name) + ' (ID: ' + id + ')')
+          webBot.chat.postMessage(message.channel, 'The current map is ' + linkWithMapName(id, map.name) + ' (ID: ' + id + ')')
         })
       }
     },
@@ -332,9 +332,9 @@ module.exports = function (
                    message.text.substring(9) : getChannelSetting(message.channel, 'map')
         Metamaps.getMap(id, tokens[message.user], function (err, map) {
           if (err) {
-            return rtm.sendMessage('there was an error retrieving the map', message.channel)
+            return rtmBot.sendMessage('there was an error retrieving the map', message.channel)
           }
-          web.chat.postMessage(message.channel, 'map name: ' + linkWithMapName(id, map.name) + '\n' + Metamaps.formatTopicsForDisplay(map.topics))
+          webBot.chat.postMessage(message.channel, 'map name: ' + linkWithMapName(id, map.name) + '\n' + Metamaps.formatTopicsForDisplay(map.topics))
         })
       }
     },
@@ -350,7 +350,7 @@ module.exports = function (
       run: function (message) {
         var id = message.text.length > 8 ?
                    message.text.substring(9) : getChannelSetting(message.channel, 'map')
-        rtm.sendMessage(METAMAPS_URL + '/maps/' + id, message.channel)
+        rtmBot.sendMessage(METAMAPS_URL + '/maps/' + id, message.channel)
       }
     },
     {
@@ -366,10 +366,10 @@ module.exports = function (
         const mapName = message.text.substring(11)
         Metamaps.createMap(mapName, tokens[message.user], function (err, map) {
           if (err) {
-            return rtm.sendMessage('there was an error creating the map', message.channel)
+            return rtmBot.sendMessage('there was an error creating the map', message.channel)
           }
           setChannelSetting(message.channel, 'map', map.id)
-          web.chat.postMessage(message.channel, 'Channel is set to new map: ' + linkWithMapName(map.id, mapName) + ' (ID: ' + map.id + ')')
+          webBot.chat.postMessage(message.channel, 'Channel is set to new map: ' + linkWithMapName(map.id, mapName) + ' (ID: ' + map.id + ')')
         })
       }
     },
@@ -386,11 +386,11 @@ module.exports = function (
         var metacode_name = message.text.substring(13)
         var m = Metamaps.findMetacodeByNameIdOrEmoji(metacode_name)
         if (!m) {
-          rtm.sendMessage(metacode_name + ' isn\'t an enabled metacode', message.channel) // list available metacodes?
+          rtmBot.sendMessage(metacode_name + ' isn\'t an enabled metacode', message.channel) // list available metacodes?
           return
         }
         setChannelSetting(message.channel, 'metacode', m[1]) // the ID
-        rtm.sendMessage('Ok, I\'ve switched the default metacode for this channel to :' + m[2] + ': *' + m[0] + '*', message.channel)
+        rtmBot.sendMessage('Ok, I\'ve switched the default metacode for this channel to :' + m[2] + ': *' + m[0] + '*', message.channel)
       }
     },
     {
@@ -429,8 +429,8 @@ module.exports = function (
         var mapId = getChannelSetting(message.channel, 'map')
         const context = {
           dataStore,
-          webBot: web,
-          rtmBot: rtm,
+          webBot: webBot,
+          rtmBot: rtmBot,
           tokens,
           mapId,
           sessionType,
@@ -453,7 +453,7 @@ module.exports = function (
         COMMANDS.forEach(function (command) {
           if (command.inHelpList) help += '*' + command.cmd + command.variable + '* ' + command.helpText + '\n'
         })
-        rtm.sendMessage(help, message.channel)
+        rtmBot.sendMessage(help, message.channel)
       }
     },
     {
@@ -491,7 +491,7 @@ module.exports = function (
     // process the reaction
     var firstChar = reaction.item.channel.substring(0, 1)
     var endpoint
-    var channel = rtm.dataStore.getChannelGroupOrDMById(reaction.item.channel)
+    var channel = rtmBot.dataStore.getChannelGroupOrDMById(reaction.item.channel)
 
     if (firstChar === 'C') {
       endpoint = teamWebClient.channels
