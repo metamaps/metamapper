@@ -1,4 +1,3 @@
-if (process.env.NODE_ENV !== 'production') require('dotenv').config()
 const Promise = require('bluebird')
 const METAMAPS_URL = process.env.METAMAPS_URL
 const { dmForUserId } = require('./clientHelpers.js')
@@ -8,22 +7,25 @@ const Metamaps = require('./metamaps.js')
 const session = require('./session.js')
 const processes = require('./processes')
 
+// TODO: refactor so this code is shared
+// the full url that this server is running at
+const fullUrl = process.env.PROTOCOL + '://' + process.env.DOMAIN
+const authRoute = '/sign_in'
+const signInUrl = fullUrl + authRoute
+
 module.exports = function (
   tokens,
   users,
   botId,
-  signInUrl,
+  teamName,
   channelSettings,
-  persistChannelSetting,
-  teamName) {
+  persistChannelSetting) {
 
   const clients = getClientsForTeam(teamName)
   const dataStore = clients.dataStore
   const teamWebClient = clients.webApp
   const webBot = clients.webBot
   const rtmBot = clients.rtmBot
-
-  var metacodes = Metamaps.metacodes
 
   const getArchiveLink = (channelId, messageId) => {
     const teamDomain = rtmBot.dataStore.teams[rtmBot.activeTeamId].domain

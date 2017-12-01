@@ -280,7 +280,6 @@ function configureSession (context, cb) {
           description: apply(collectDescription, newContext),
           linkedChannel: apply(collectChannel, newContext),
           linkedMap: apply(collectMap, newContext),
-          // TODO enable to also just get participants by channel
           participantIds: apply(collectParticipants, newContext)
         }, finished)
       },

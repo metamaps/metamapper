@@ -13,23 +13,31 @@ const fullUrl = process.env.PROTOCOL + '://' + process.env.DOMAIN
 const authRoute = '/sign_in'
 const authUrl = fullUrl + authRoute
 
-function setup (team, persistChannelSetting) {
-  const { name, accessToken, tokens, mmUserIds, botToken, botId } = team
+function setup (team, tokens, mmUserIds, channelSettings, persistChannelSetting) {
+  const {
+    name,
+    accessToken,
+    botToken,
+    botId
+  } = team
+  // TODO: make this do something? (initialize it with mmUserIds?)
   const users = {}
+
+  // a dataStore to share between the http and websockets clients
   const dataStore = new DataStore()
   // the "App" has different (greater) permissions than the bot
   const webApp = new WebClient(accessToken)
   const webBot = new WebClient(botToken, {logLevel: 'info', dataStore: dataStore})
   const rtmBot = new RtmClient(botToken, {logLevel: 'info', dataStore: dataStore})
-  // so they can be accesible within other modules
+  // set these into memory so they can be accesible within other modules
   setClientsForTeam(name, dataStore, webApp, webBot, rtmBot)
+  // this initializes the websockets slack bot
   rtmBot.start()
 
-  const SLACK = commands(tokens, users, botId, authUrl,
-    team.channelSettings,
-    persistChannelSetting,
-    team.name)
+  const SLACK = commands(tokens, users, botId, name, channelSettings, persistChannelSetting)
 
+  // function for checking whether user is authenticated with metamaps or not
+  // TODO: move into its own re-usable module
   function verified(message) {
     if (!tokens[message.user]) {
       var id = rtmBot.activeTeamId + message.user
@@ -49,6 +57,9 @@ function setup (team, persistChannelSetting) {
     return true
   }
 
+  // for every message, check whether it calls a command
+  // only run one command, multiple should never be matched
+  // this means that for now, the order is important
   rtmBot.on(RTM_EVENTS.MESSAGE, function (message) {
     if (!message.text) return
 
@@ -64,6 +75,7 @@ function setup (team, persistChannelSetting) {
     })
   })
 
+  // for every reaction, check whether it should perform some action
   rtmBot.on(RTM_EVENTS.REACTION_ADDED, SLACK.REACTIONS)
 
   return {
