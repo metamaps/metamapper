@@ -8,8 +8,12 @@ const { setClientsForTeam } = require('./clientsForTeam.js')
 const { dmForUserId } = require('./clientHelpers.js')
 const commands = require('./commands.js')
 
+// the full url that this server is running at
+const fullUrl = process.env.PROTOCOL + '://' + process.env.DOMAIN
+const authRoute = '/sign_in'
+const authUrl = fullUrl + authRoute
 
-function setup (team, authUrl, persistChannelSetting) {
+function setup (team, persistChannelSetting) {
   const { name, accessToken, tokens, mmUserIds, botToken, botId } = team
   const users = {}
   const dataStore = new DataStore()

@@ -1,11 +1,5 @@
 const metamapBot = require('./create-from-slack')
-
 const ChannelSetting = require('./models/ChannelSetting')
-
-// the full url that this server is running at
-const fullUrl = process.env.PROTOCOL + '://' + process.env.DOMAIN
-const authRoute = '/sign_in'
-const authUrl = fullUrl + authRoute
 
 // will store the bot instances that are running
 const bots = {}
@@ -13,7 +7,7 @@ const bots = {}
 // setup a function which will spin up a bot for a team
 module.exports = {
   startBotForTeam: function startBotForTeam(team, tokens = {}, mmUserIds = {}, channelSettings = []) {
-    const toPassIn = {
+    const botInfo = {
       name: team.get('team_name'),
       accessToken: team.get('access_token'),
       botToken: team.get('bot_access_token'),
@@ -35,7 +29,7 @@ module.exports = {
       channelSetting.metacode_id = metacodeId
       channelSetting.save()
     }
-    bots[team.get('team_id')] = metamapBot.setup(toPassIn, authUrl, persistChannelSetting)
+    bots[team.get('team_id')] = metamapBot.setup(botInfo, persistChannelSetting)
   },
   getBot: function (teamId) {
     return bots[teamId]
