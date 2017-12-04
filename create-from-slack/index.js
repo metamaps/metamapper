@@ -20,8 +20,6 @@ function setup (team, tokens, mmUserIds, channelSettings, persistChannelSetting)
     botToken,
     botId
   } = team
-  // TODO: make this do something? (initialize it with mmUserIds?)
-  const users = {}
 
   // a dataStore to share between the http and websockets clients
   const dataStore = new DataStore()
@@ -34,7 +32,7 @@ function setup (team, tokens, mmUserIds, channelSettings, persistChannelSetting)
   // this initializes the websockets slack bot
   rtmBot.start()
 
-  const SLACK = commands(tokens, users, botId, name, channelSettings, persistChannelSetting)
+  const SLACK = commands(tokens, mmUserIds, botId, name, channelSettings, persistChannelSetting)
 
   // function for checking whether user is authenticated with metamaps or not
   // TODO: move into its own re-usable module

@@ -15,7 +15,7 @@ const signInUrl = fullUrl + authRoute
 
 module.exports = function (
   tokens,
-  users,
+  userIds,
   botId,
   teamName,
   channelSettings,
@@ -264,12 +264,16 @@ module.exports = function (
         }
 
         // if the MM user id is cached, use it. otherwise, find it.
-        if (users[message.user]) {
-          return getMaps(users[message.user].id)
+        if (userIds[message.user]) {
+          return getMaps(userIds[message.user])
         } else {
-          Metamaps.getCurrentUser(tokens[message.user], function (err, user) {
-            users[message.user] = user
-            return getMaps(user.id)
+          Metamaps.getMyId(tokens[message.user], function (err, id) {
+            if (err) {
+              console.log(err)
+              return
+            }
+            userIds[message.user] = id.toString()
+            return getMaps(id.toString())
           })
         }
       }
