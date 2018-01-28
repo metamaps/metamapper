@@ -57,6 +57,10 @@ They'll guide the process and be able to communicate messages to you throughout.
       participantWillStart: 'The poll is beginning. Respond agree, disagree, or pass until there are none left.',
       participantFinished: 'That\'s all of them. You will be notified when everyone has completed.'
     },
+    networkMapping: {
+      participantWillStart: 'The survey is beginning. Respond with a number from 0-1 that represents how well you know each person.',
+      participantFinished: 'That\'s all of them. You will be notified when everyone has completed.'
+    },
     buildingContext: {
       collectFocalTopic: {
         explainHasTopics: 'When the session starts, participants will be prompted to respond to a focused topic of your choice. Select one from the existing topics by typing its\' ID, or create a new one by typing it in.',
