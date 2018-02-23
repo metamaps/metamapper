@@ -1,17 +1,18 @@
 const { apply } = require('async')
-const metamapBot = require('./create-from-slack')
+const metamapBot = require('./botCode')
 const ChannelSetting = require('./models/ChannelSetting')
 
 // will store the bot instances that are running
 const bots = {}
 
 // setup a function for persisting channel settings
-function persistChannelSetting (teamId, channelSettings, channelId, mapId, metacodeId, capture) {
+function persistChannelSetting (type, id, channelSettings, channelId, mapId, metacodeId, capture) {
   let channelSetting = channelSettings.find(cS => cS.get('channel_id') === channelId)
   if (!channelSetting) {
     channelSetting = new ChannelSetting({
       channel_id: channelId,
-      team_id: teamId
+      team_id: id,
+      serverType: type
     })
     channelSettings.push(channelSetting)
   }
@@ -22,8 +23,14 @@ function persistChannelSetting (teamId, channelSettings, channelId, mapId, metac
 }
 
 // setup a function which will spin up a bot for a team
-function startBotForTeam(team, tokens = {}, mmUserIds = {}, channelSettings = []) {
-  const teamId = team.get('team_id')
+async function startBot(type, botConfig, tokens = {}, mmUserIds = {}, channelSettings = []) {
+  let id
+  if (type === 'slack') {
+    id = botConfig.get('team_id')
+  } else if (type === 'mattermost') {
+    id = botConfig.get('server')
+  }
+
   const channelSettingsObj = {}
   channelSettings.forEach(function (cS) {
     channelSettingsObj[cS.get('channel_id')] = {
@@ -32,24 +39,24 @@ function startBotForTeam(team, tokens = {}, mmUserIds = {}, channelSettings = []
       capture: cS.capture
     }
   })
-  bots[teamId] = metamapBot.setup(
-    {
-      name: team.get('team_name'),
-      accessToken: team.get('access_token'),
-      botToken: team.get('bot_access_token'),
-      botId: team.get('bot_user_id')
-    },
-    tokens,
-    mmUserIds,
-    channelSettingsObj,
-    apply(persistChannelSetting, teamId, channelSettings)
-  )
+  try {
+    bots[id] = await metamapBot.setup(
+      type,
+      botConfig,
+      tokens,
+      mmUserIds,
+      channelSettingsObj,
+      apply(persistChannelSetting, type, id, channelSettings)
+    )
+  } catch (err) {
+    console.error(err)
+  }
 }
 
 module.exports = {
   persistChannelSetting: persistChannelSetting,
-  startBotForTeam: startBotForTeam,
-  getBot: function (teamId) {
-    return bots[teamId]
+  startBot: startBot,
+  getBot: function (id) {
+    return bots[id]
   }
 }

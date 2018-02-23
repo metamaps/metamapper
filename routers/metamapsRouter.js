@@ -9,7 +9,7 @@ const router = express.Router()
 const Token = require('../models/Token')
 
 const { getBot } = require('../bots')
-const mmApi = require('../create-from-slack/metamaps')
+const mmApi = require('../botCode/metamaps')
 
 // the full url that this server is running at
 const fullUrl = process.env.PROTOCOL + '://' + process.env.DOMAIN
@@ -63,7 +63,7 @@ router.get(metamapsOauthRoute, function (req, res) {
     // In addition to saving it to the database, add it to the running version
     getBot(teamId).addTokenForUser(userId, body.access_token)
     // At this point, we consider it successful and respond with the HTML page
-    res.sendFile(path.join(__dirname, '../pages/user-authenticated.html'));
+    res.render('pages/user-authenticated')
     // now just to save it in the database, we go back to the Metamaps API and fetch the user ID
     mmApi.getMyId(body.access_token, (err, id) => {
       if (err) {

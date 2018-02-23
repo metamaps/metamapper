@@ -4,10 +4,10 @@ const express = require('express')
 const router = express.Router()
 
 router.get('/authed', function (req, res) {
-  res.sendFile(path.join(__dirname, '../pages/user-authenticated.html'));
+  res.render('pages/user-authenticated')
 })
 router.get('/added-to-team', function (req, res) {
-  res.sendFile(path.join(__dirname, '../pages/added-to-team.html'));
+  res.render('pages/added-to-team')
 })
 
 // This is a random endpoint that is currently being used by Robert Best

@@ -5,7 +5,8 @@ const ChannelSetting = mongoose.model('ChannelSetting', {
   map_id: String, // the currently selelected map for a channel
   capture: Boolean, // whether to capture every message or not
   channel_id: String,
-  team_id: String
+  team_id: String,
+  serverType: String // slack or mattermost, or another server type
 })
 
 module.exports = ChannelSetting
