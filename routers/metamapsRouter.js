@@ -30,8 +30,8 @@ router.get(authRoute, function (req, res) {
 router.get(metamapsOauthRoute, function (req, res) {
   var code = req.query.code
   var key = req.query.id
-  var userId = key.substring(9)
-  var teamId = key.slice(0, 9)
+  var userId = key.split('/')[1]
+  var teamId = key.split('/')[0]
   var redirect_uri = process.env.PROTOCOL + '://' + process.env.DOMAIN + req.path + '?id=' + key
   // Metamaps uses the multi-step Oauth2 authorization flow
   var options = {

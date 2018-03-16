@@ -1,6 +1,5 @@
 const Promise = require('bluebird')
 const { setClientsForTeam } = require('./clientsForTeam.js')
-const { dmForUserId } = require('./clientHelpers.js')
 const { startMattermostBot } = require('../mattermost')
 const { startSlackBot } = require('../slack')
 const commands = require('./commands.js')
@@ -17,9 +16,13 @@ async function setup (type, botConfig, tokens, mmUserIds, channelSettings, persi
     name = botConfig.get('team_name')
     botId = botConfig.get('bot_user_id')
   } else if (type === 'mattermost') {
-    clients = await startMattermostBot(botConfig)
+    try {
+      clients = await startMattermostBot(botConfig)
+    } catch (e) {
+      console.log('this error', e)
+    }
     name = botConfig.get('server')
-    botId = 'placeholder'
+    botId = clients.webBot.userId
   }
   const { dataStore, webApp, webBot, rtmBot } = clients
   // set these into memory so they can be accesible within other modules
@@ -31,17 +34,13 @@ async function setup (type, botConfig, tokens, mmUserIds, channelSettings, persi
   // TODO: move into its own re-usable module
   function verified(message) {
     if (!tokens[message.user]) {
-      var id = rtmBot.activeTeamId + message.user
-      const context = {
-        dataStore,
-        webBot
-      }
-      dmForUserId(context, message.user, (err, dmId) => {
+      var id = rtmBot.activeTeamId + '/' + message.user
+      webBot.dm(message.user, (err, dmId) => {
         if (err) {
           console.log(err)
           return
         }
-        rtmBot.sendMessage('You haven\'t authenticated yet, please go to ' + authUrl + '?id=' + id, dmId)
+        rtmBot.send('You haven\'t authenticated yet, please go to ' + authUrl + '?id=' + id, dmId)
       })
       return false
     }
@@ -71,16 +70,12 @@ async function setup (type, botConfig, tokens, mmUserIds, channelSettings, persi
   return {
     addTokenForUser: function addTokenForUser(userId, token) {
       tokens[userId] = token
-      const context = {
-        dataStore,
-        webBot
-      }
-      dmForUserId(context, userId, (err, dmId) => {
+      webBot.dm(userId, (err, dmId) => {
         if (err) {
           console.log(err)
           return
         }
-        rtmBot.sendMessage('Nice! You are now authorized with metamaps.', dmId)
+        rtmBot.send('Nice! You are now authorized with metamaps.', dmId)
       })
     },
     addMmUserId: function addMmUserId(mmUserId, userId) {
