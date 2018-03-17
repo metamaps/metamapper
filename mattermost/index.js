@@ -7,15 +7,32 @@ const Client4 = require('mattermost-redux/client/client4').default
 const WsClient = require('mattermost-redux/client/websocket_client').default
 const url = require('url')
 
+// from: https://api.mattermost.com/#tag/WebSocket
+const REACTION_EVENT = 'reaction_added'
+const MESSAGE_EVENT = 'posted'
+
 function transformEvent(event) {
     let parsed
     switch (event.event) {
-        case 'posted':
-            parsed = JSON.parse(event.data.post)
-            event.text = parsed.message
-            event.channel = parsed.channel_id
-            event.user = parsed.user_id
-            event.ts = parsed.id // to match slack
+        case MESSAGE_EVENT:
+            try {
+                parsed = JSON.parse(event.data.post)
+                event.text = parsed.message
+                event.channel = parsed.channel_id
+                event.user = parsed.user_id
+                event.ts = parsed.id // to match slack
+            } catch (e) {}
+        case REACTION_EVENT:
+            try {
+                parsed = JSON.parse(event.data.reaction)
+                event.user = parsed.user_id
+                event.reaction = parsed.emoji_name
+                event.item = {
+                    type: 'message',
+                    ts: parsed.post_id,
+                    channel: event.broadcast.channel_id
+                }
+            } catch (e) {}
     }
     return event
 }
@@ -65,10 +82,12 @@ function createWsClient(webClient, connectionUrl, token, activeTeamId, activeUse
             }
         })
     }
-    // from: https://api.mattermost.com/#tag/WebSocket
-    wsClient.MESSAGE_EVENT = 'posted'
-    wsClient.REACTION_EVENT = 'reaction_added'
+    wsClient.MESSAGE_EVENT = MESSAGE_EVENT
+    wsClient.REACTION_EVENT = REACTION_EVENT
     wsClient.setEventCallback(event => {
+        if (!event) {
+            return
+        }
         eventCallbacks
             .filter(ecb => ecb.type === event.event )
             .map(ecb => ecb.fn)
@@ -82,6 +101,12 @@ function createWsClient(webClient, connectionUrl, token, activeTeamId, activeUse
     }
     wsClient.isDm = (event, cb = () => {}) => {
         cb(null, event.data.channel_type === 'D')
+    }
+    wsClient.getArchiveLink = (channelId, messageId) => {
+        // TODO!
+        return 'https://test.com'
+        //const timestampWithoutDot = messageId.replace('.','')
+        //return `https://${teamDomain}.slack.com/archives/${channelName}/p${timestampWithoutDot}`
     }
     wsClient.activeTeamId = activeTeamId
     wsClient.activeUserId = activeUserId
@@ -97,6 +122,24 @@ function createDataStore(webClient, store) {
     return dataStore
 }
 
+function createWebApp(webClient) {
+    return {
+        getMessageForReaction: (reaction, cb) => {
+            webClient.doFetch(
+                `${webClient.getPostRoute(reaction.item.ts)}`,
+                {method: 'get'})
+                .then((res) => {
+                    res.ts = res.id
+                    res.text = res.message
+                    cb(null, res)
+                })
+                .catch((err) => {
+                    cb(err)
+                })
+        }
+    }
+}
+
 function createWebClient(server) {
     const webClient = new Client4
     webClient.setUrl(server)
@@ -106,8 +149,8 @@ function createWebClient(server) {
             .then(res => cb(null, res))
             .catch(err => cb(err))
     }
-    webClient.react = (userId, postId, reaction, cb = () => {}) => {
-        webClient.addReaction(userId, postId, reaction)
+    webClient.react = (channelId, postId, reaction, cb = () => {}) => {
+        webClient.addReaction(webClient.userId, postId, reaction)
             .then(res => cb(null, res))
             .catch(err => cb(err))
     }
@@ -149,10 +192,11 @@ async function startMattermostBot(mattermost) {
         webClient.activeUserId
     )
     const dataStore = createDataStore(webClient)
+    const webApp = createWebApp(webClient)
 
     return {
         dataStore: dataStore,
-        webApp: null,
+        webApp: webApp,
         webBot: webClient,
         rtmBot: wsClient
     }

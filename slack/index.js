@@ -11,10 +11,34 @@ async function startSlackBot(slack) {
     const webApp = new WebClient(slack.get('access_token'))
     const webBot = new WebClient(slack.get('bot_access_token'), {logLevel: 'info', dataStore: dataStore})
     const rtmBot = new RtmClient(slack.get('bot_access_token'), {logLevel: 'info', dataStore: dataStore})
-    console.log(slack.get('bot_access_token'))
-    console.log(slack.get('team_name'))
     // this initializes the websockets slack bot
     rtmBot.start()
+
+    webApp.getMessageForReaction = (reaction, cb) => {
+        // process the reaction
+        const firstChar = reaction.item.channel.substring(0, 1)
+        let endpoint
+        const channel = dataStore.getChannelGroupOrDMById(reaction.item.channel)
+
+        if (firstChar === 'C') {
+          endpoint = webApp.channels
+        } else if (firstChar === 'G') {
+          endpoint = channel._modelName === 'MPDM' ? webApp.mpdm : webApp.groups
+        } else if (firstChar === 'D') {
+          endpoint = webApp.dm
+        }
+        return endpoint.history(reaction.item.channel, {
+          latest: reaction.item.ts,
+          inclusive: true,
+          count: 1
+        }).then(resp => {
+          if (!resp.ok) {
+              return cb(new Error('Error fetching message'))
+          }
+          const message = resp.messages[0]
+          cb(null, message)
+        })
+      }
 
     rtmBot.MESSAGE_EVENT = RTM_EVENTS.MESSAGE
     rtmBot.REACTION_EVENT = RTM_EVENTS.REACTION_ADDED
@@ -22,6 +46,24 @@ async function startSlackBot(slack) {
     rtmBot.isDm = (message, cb = () => {}) => {
         const channelIsh = rtmBot.dataStore.getChannelGroupOrDMById(message.channel)
         cb(null, channelIsh._modelName === 'DM')
+    }
+
+    rtmBot.getArchiveLink = (channelId, messageId) => {
+        const teamDomain = dataStore.teams[rtmBot.activeTeamId].domain
+        const channelIsh = dataStore.getChannelGroupOrDMById(channelId)
+        let channelName
+        if (channelIsh._modelName === 'Channel') {
+          channelName = channelIsh.name
+        } else if (channelIsh._modelName === 'Group' && !channelIsh.is_mpim) {
+          // private channel
+          channelName = channelIsh.name
+        } else if (channelIsh._modelName === 'Group') {
+          channelName = channelIsh.id
+        } else if (channelIsh._modelName === 'DM') {
+          channelName = channelIsh.id
+        }
+        const timestampWithoutDot = messageId.replace('.','')
+        return `https://${teamDomain}.slack.com/archives/${channelName}/p${timestampWithoutDot}`
     }
 
     webBot.message = (channel_id, message, cb = () => {}) => {

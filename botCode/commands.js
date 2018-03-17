@@ -13,6 +13,7 @@ const authRoute = '/sign_in'
 const signInUrl = fullUrl + authRoute
 
 module.exports = function (
+  serverType,
   tokens,
   userIds,
   botId,
@@ -22,27 +23,9 @@ module.exports = function (
 
   const clients = getClientsForTeam(teamName)
   const dataStore = clients.dataStore
-  const teamWebClient = clients.webApp
+  const webApp = clients.webApp
   const webBot = clients.webBot
   const rtmBot = clients.rtmBot
-
-  const getArchiveLink = (channelId, messageId) => {
-    const teamDomain = rtmBot.dataStore.teams[rtmBot.activeTeamId].domain
-    const channelIsh = rtmBot.dataStore.getChannelGroupOrDMById(channelId)
-    let channelName
-    if (channelIsh._modelName === 'Channel') {
-      channelName = channelIsh.name
-    } else if (channelIsh._modelName === 'Group' && !channelIsh.is_mpim) {
-      // private channel
-      channelName = channelIsh.name
-    } else if (channelIsh._modelName === 'Group') {
-      channelName = channelIsh.id
-    } else if (channelIsh._modelName === 'DM') {
-      channelName = channelIsh.id
-    }
-    const timestampWithoutDot = messageId.replace('.','')
-    return `https://${teamDomain}.slack.com/archives/${channelName}/p${timestampWithoutDot}`
-  }
 
   // this is for responses
   const topicChannelPerson = {}
@@ -53,12 +36,11 @@ module.exports = function (
       setTopicChannelPerson(channelId, personId, messagesTopics[channelId + messageId])
       return
     }
-    const archiveLink = getArchiveLink(channelId, messageId)
+    const archiveLink = rtmBot.getArchiveLink(channelId, messageId)
     Metamaps.findTopicWithLink(archiveLink, tokens[personId], (err, topic) => {
       if (err || !topic) {
         if (err) console.log(err)
         setMessageChannelPerson(channelId, personId, null)
-        webBot.react(channelId, messageId, 'exclamation')
         return
       }
       messagesTopics[channelId + messageId] = topic.id // add it to the cache
@@ -101,7 +83,7 @@ module.exports = function (
     return channelSettings[channel][property]
   }
 
-  function postTopicsToMetamaps(topics, userId, channel, timestamp) {
+  function postTopicsToMetamaps(topics, userId, channel, messageId) {
     var addToMap = getChannelSetting(channel, 'map') // returns the id
     if (!addToMap) {
       rtmBot.send('There\'s no map set for this channel, use *set map*', channel)
@@ -122,7 +104,7 @@ module.exports = function (
       }
 
       // add link back to the message to the topic getting created
-      topic.link = getArchiveLink(channel, timestamp)
+      topic.link = rtmBot.getArchiveLink(channel, messageId)
       topic.defer_to_map_id = addToMap
 
       const emoji = Metamaps.findMetacodeEmoji(topic.metacode_id)
@@ -147,7 +129,7 @@ module.exports = function (
               Metamaps.addSynapseToMap(addToMap, synapse, tokens[userId], (err, synapseId, mappingId) => {
                 if (err) {
                   console.log(err)
-                  webBot.react(channel, timestamp, 'exclamation')
+                  webBot.react(channel, messageId, 'exclamation')
                 }
               })
               setMessageChannelPerson(channel, userId, null) // reset
@@ -155,9 +137,8 @@ module.exports = function (
             else setTimeout(() => createSynapse(), 50) // must be waiting for fetchTopicForMessage to succeed or error
           }
           createSynapse()
-          console.log(channel)
-          webBot.react(channel, timestamp, emoji)
-            .then(() => webBot.react(channel, timestamp, 'zap'))
+          webBot.react(channel, messageId, emoji)
+          webBot.react(channel, messageId, 'zap')
         }
       })
     })
@@ -231,11 +212,11 @@ module.exports = function (
               }
               const iTvars = {
                 signInUrl,
-                id: rtmBot.activeTeamId + '/' + message.user
+                id: `${serverType}/${rtmBot.activeTeamId}/${message.user}`
               }
               rtmBot.send(iT('en.signedIn.signIn', iTvars), dm)
             })
-          })     
+          })
         }
       }
     },
@@ -366,13 +347,15 @@ module.exports = function (
         return true
       },
       run: function (message) {
-        const mapName = message.text.substring(11)
-        Metamaps.createMap(mapName, tokens[message.user], function (err, map) {
+        const map = {
+          name: message.text.substring(11)
+        }
+        Metamaps.createMap(map, tokens[message.user], function (err, map) {
           if (err) {
             return rtmBot.send('there was an error creating the map', message.channel)
           }
           setChannelSetting(message.channel, 'map', map.id)
-          webBot.message(message.channel, 'Channel is set to new map: ' + linkWithMapName(map.id, mapName) + ' (ID: ' + map.id + ')')
+          webBot.message(message.channel, 'Channel is set to new map: ' + linkWithMapName(map.id, map.name) + ' (ID: ' + map.id + ')')
         })
       }
     },
@@ -496,35 +479,11 @@ module.exports = function (
       "event_ts": "1360782804.083113"
   }
   */
-  const commonForReactions = reaction => {
-    // process the reaction
-    var firstChar = reaction.item.channel.substring(0, 1)
-    var endpoint
-    var channel = rtmBot.dataStore.getChannelGroupOrDMById(reaction.item.channel)
-
-    if (firstChar === 'C') {
-      endpoint = teamWebClient.channels
-    } else if (firstChar === 'G') {
-      endpoint = channel._modelName === 'MPDM' ? teamWebClient.mpdm : teamWebClient.groups
-    } else if (firstChar === 'D') {
-      endpoint = teamWebClient.dm
-    }
-    return endpoint.history(reaction.item.channel, {
-      latest: reaction.item.ts,
-      inclusive: true,
-      count: 1
-    }).then(resp => {
-      if (!resp.ok) return Promise.reject()
-      const message = resp.messages[0]
-      return Promise.resolve(message)
-    })
-  }
   const differentReactions = [
     {
       check: reaction => Metamaps.findMetacodeId(reaction.reaction),
       run: reaction => {
-        commonForReactions(reaction)
-        .then(message => {
+        webApp.getMessageForReaction(reaction, (err, message) => {
           postTopicsToMetamaps([
             { metacode_id: Metamaps.findMetacodeId(reaction.reaction), name: message.text }
           ], reaction.user, reaction.item.channel, message.ts)

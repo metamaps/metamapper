@@ -339,7 +339,7 @@ module.exports = {
         console.log('body: ', body)
         return callback('creating map failed')
       }
-      var body = JSON.parse(body)
+      body = JSON.parse(body)
       callback(null, body.data)
     })
   },

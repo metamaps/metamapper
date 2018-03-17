@@ -12,7 +12,7 @@ function persistChannelSetting (type, id, channelSettings, channelId, mapId, met
     channelSetting = new ChannelSetting({
       channel_id: channelId,
       team_id: id,
-      serverType: type
+      server_type: type
     })
     channelSettings.push(channelSetting)
   }

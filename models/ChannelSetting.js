@@ -6,7 +6,7 @@ const ChannelSetting = mongoose.model('ChannelSetting', {
   capture: Boolean, // whether to capture every message or not
   channel_id: String,
   team_id: String,
-  serverType: String // slack or mattermost, or another server type
+  server_type: String // slack or mattermost, or another server type
 })
 
 module.exports = ChannelSetting

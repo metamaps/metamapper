@@ -28,13 +28,12 @@ router.get(authRoute, function (req, res) {
 
 // This is the route that Metamaps redirects back to once user authorizes our service to access that account
 router.get(metamapsOauthRoute, function (req, res) {
-  var code = req.query.code
-  var key = req.query.id
-  var userId = key.split('/')[1]
-  var teamId = key.split('/')[0]
-  var redirect_uri = process.env.PROTOCOL + '://' + process.env.DOMAIN + req.path + '?id=' + key
+  const code = req.query.code
+  const key = req.query.id
+  const [serverType, teamId, userId] = key.split('/')
+  const redirect_uri = process.env.PROTOCOL + '://' + process.env.DOMAIN + req.path + '?id=' + key
   // Metamaps uses the multi-step Oauth2 authorization flow
-  var options = {
+  const options = {
     uri: metamapsTokenUrl,
     form: {
       client_id: METAMAPS_CLIENT_ID,
@@ -52,12 +51,14 @@ router.get(metamapsOauthRoute, function (req, res) {
     }
     body = JSON.parse(body)
     if (!body.access_token) return res.send('There was an error')
-    // Store the token for that user TODO: encrypt it!
-    var token = new Token({
+    // Store the token for that user
+    // TODO: encrypt it!
+    const token = new Token({
       access_token: body.access_token,
       key: key,
       user_id: userId,
-      team_id: teamId
+      team_id: teamId,
+      server_type: serverType
     })
     token.save()
     // In addition to saving it to the database, add it to the running version

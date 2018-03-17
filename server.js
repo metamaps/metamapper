@@ -40,43 +40,44 @@ db.once('open', function() {
   })
 
   // Initialize
-  Team.find(function (err, teams) {
-    if (err) {
-      console.log(err)
-      return
-    }
-    teams.forEach(function (team) {
-      Token.find({ team_id: team.get('team_id') }, function (err, tokens) {
-        if (err) {
-          console.log(err)
-          return
-        }
-        ChannelSetting.find({ team_id: team.get('team_id') }, function (err, channelSettings) {
+  function startBotsForServerType (model, server_type, getRecordId) {
+    model.find(function (err, records) {
+      if (err) {
+        console.log(err)
+        return
+      }
+      records.forEach(function (record) {
+        Token.find({ team_id: getRecordId(record), server_type }, function (err, tokens) {
           if (err) {
             console.log(err)
             return
           }
-          var userTokens = {}
-          const mmUserIds = {}
-          tokens.forEach(t => {
-            if (t.get('access_token')) {
-              userTokens[t.get('user_id')] = t.get('access_token')
-              mmUserIds[t.get('mm_user_id')] = t.get('user_id')
+          ChannelSetting.find({ team_id: getRecordId(record), server_type }, function (err, channelSettings) {
+            if (err) {
+              console.log(err)
+              return
             }
+            const userTokens = {}
+            const mmUserIds = {}
+            tokens.forEach(t => {
+              if (t.get('access_token')) {
+                userTokens[t.get('user_id')] = t.get('access_token')
+                mmUserIds[t.get('mm_user_id')] = t.get('user_id')
+              }
+            })
+            startBot(server_type, record, userTokens, mmUserIds, channelSettings)
           })
-          startBot('slack', team, userTokens, mmUserIds, channelSettings)
         })
       })
     })
-  })
-  Mattermost.find(function (err, mattermosts) {
-    if (err) {
-      console.log(err)
-      return
-    }
-    mattermosts.forEach(mattermost => {
-      startBot('mattermost', mattermost)
-    })
+  }
+
+  const serverTypes = [
+    [Team, 'slack', r => r.get('team_id')],
+    [Mattermost, 'mattermost', r => r._id]
+  ]
+  serverTypes.forEach(serverType => {
+    startBotsForServerType(serverType[0], serverType[1], serverType[2])
   })
 })
 
