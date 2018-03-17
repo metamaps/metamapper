@@ -12,14 +12,20 @@ db.once('open', function() {
   Token.find(function (err, tokens) {
     tokens.forEach(t => {
       t.set('server_type', 'slack')
-      t.save()
+      t.save(function(err) {
+        console.log(err)
+      })
     })
     ChannelSetting.find(function(err, settings) {
       settings.forEach(s => {
         s.set('server_type', 'slack')
-        s.save()
+        s.save(function(err) {
+          console.log(err)
+        })
       })
-      process.exit()
+      setTimeout(function () {
+        process.exit()
+      }, 10000)
     })
   })
 })
