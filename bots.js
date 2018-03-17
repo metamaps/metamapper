@@ -28,7 +28,7 @@ async function startBot(type, botConfig, tokens = {}, mmUserIds = {}, channelSet
   if (type === 'slack') {
     id = botConfig.get('team_id')
   } else if (type === 'mattermost') {
-    id = botConfig.get('server')
+    id = botConfig._id
   }
 
   const channelSettingsObj = {}

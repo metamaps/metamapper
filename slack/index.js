@@ -11,8 +11,11 @@ async function startSlackBot(slack) {
     const webApp = new WebClient(slack.get('access_token'))
     const webBot = new WebClient(slack.get('bot_access_token'), {logLevel: 'info', dataStore: dataStore})
     const rtmBot = new RtmClient(slack.get('bot_access_token'), {logLevel: 'info', dataStore: dataStore})
+    console.log(slack.get('bot_access_token'))
+    console.log(slack.get('team_name'))
     // this initializes the websockets slack bot
     rtmBot.start()
+
     rtmBot.MESSAGE_EVENT = RTM_EVENTS.MESSAGE
     rtmBot.REACTION_EVENT = RTM_EVENTS.REACTION_ADDED
     rtmBot.send = rtmBot.sendMessage
@@ -50,7 +53,7 @@ async function startSlackBot(slack) {
             cb(null, info.channel.members)
         })
     }
-    
+
     return {
         dataStore: dataStore,
         webApp: webApp,

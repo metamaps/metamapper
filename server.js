@@ -75,7 +75,6 @@ db.once('open', function() {
       return
     }
     mattermosts.forEach(mattermost => {
-      console.log(mattermost)
       startBot('mattermost', mattermost)
     })
   })

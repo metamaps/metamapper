@@ -3,10 +3,8 @@ require('isomorphic-fetch')
 if (!global.WebSocket) {
     global.WebSocket = require('ws')
 }
-const configureServiceStore = require('mattermost-redux/store').default
 const Client4 = require('mattermost-redux/client/client4').default
 const WsClient = require('mattermost-redux/client/websocket_client').default
-const reduxInitialState = require('mattermost-redux/store/initial_state').default
 const url = require('url')
 
 function transformEvent(event) {
@@ -43,9 +41,9 @@ async function loginAndGetUser(server, username, password) {
     return user
 }
 
-function createWsClient(webClient, store, connectionUrl, token, activeTeamId, activeUserId) {
+function createWsClient(webClient, connectionUrl, token, activeTeamId, activeUserId) {
   const wsClient = new WsClient()
-  wsClient.initialize(token, store.dispatch, store.getState, {connectionUrl})  
+  wsClient.initialize(token, {}, {}, {connectionUrl})
         .catch((err) => {
             console.log('error connecting to mattermost', err)
         })
@@ -131,7 +129,6 @@ function createWebClient(server) {
 
 async function startMattermostBot(mattermost) {
 
-    const store = configureServiceStore(reduxInitialState, {}, {persistOptions: {}})
 
     const webClient = createWebClient(mattermost.get('server'))
     try {
@@ -146,14 +143,13 @@ async function startMattermostBot(mattermost) {
     let host = url.parse(mattermost.get('server')).host
     const wsClient = createWsClient(
         webClient,
-        store,
         `wss://${host}/api/v4/websocket`,
         token,
         mattermost._id,
         webClient.activeUserId
     )
     const dataStore = createDataStore(webClient)
-    
+
     return {
         dataStore: dataStore,
         webApp: null,
