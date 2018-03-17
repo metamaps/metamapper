@@ -2,7 +2,7 @@
   "name": "metamapper",
   "version": "0.0.1",
   "engines": {
-    "node": "6.2.2"
+    "node": "8.9.4"
   },
   "dependencies": {
     "@slack/client": "^3.16.0",
