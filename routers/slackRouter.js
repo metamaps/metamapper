@@ -7,7 +7,7 @@ const urlencodedParser = bodyParser.urlencoded({ extended: false })
 
 const { handleInteractiveResponse } = require('../interactiveMessagesManager.js')
 const Team = require('../models/Team')
-const { startBotForTeam } = require('../bots')
+const { startBot } = require('../bots')
 
 const SLACK_CLIENT_ID = process.env.SLACK_CLIENT_ID
 const SLACK_CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET
@@ -44,9 +44,9 @@ router.get('/slack/confirm', function (req, res) {
       })
       team.save()
       // boot up the bot in the new team right away
-      startBotForTeam(team)
+      startBot('slack', team)
       // respond with the success "bot added to workspace" page
-      res.sendFile(path.join(__dirname+'/pages/added-to-team.html'));
+      res.render('pages/added-to-team')
     })
 })
 

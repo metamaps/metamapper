@@ -43,7 +43,7 @@ function main (context, configuration, cb) {
   // collect responses from each participant in parallel
   parallel(participantIds.map(userId =>
     function (finished) {
-      rtmBot.sendMessage(iT('en.opinionPoll.participantWillStart'), dmIds[userId])
+      rtmBot.sendM(iT('en.opinionPoll.participantWillStart'), dmIds[userId])
       // collect a response for each topic from the user, one at a time,
       // into an array using async/reduce
       reduce(
@@ -56,7 +56,7 @@ function main (context, configuration, cb) {
             finished(err)
             return
           }
-          rtmBot.sendMessage(iT('en.opinionPoll.participantFinished'), dmIds[userId])
+          rtmBot.sendM(iT('en.opinionPoll.participantFinished'), dmIds[userId])
           finished(null, {
             userId,
             opinions

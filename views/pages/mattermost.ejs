@@ -1,0 +1,52 @@
+<html>
+<head>
+  <% include ../partials/head %>
+  <style>
+      form {
+          margin-bottom: 100px;
+      }
+      input {
+          display: block;
+          width: 100%;
+          padding: 4px;
+          margin: 4px;
+          margin-bottom: 15px;
+          font-size: 20px;
+          line-height: 20px;
+          color: #444;
+      }
+      .submit {
+          height: 40px;
+          border: none;
+          cursor: pointer;
+          border-radius: 2px;
+      }
+      .error {
+          color: rgb(240, 52, 52);
+      }
+  </style>
+</head>
+<body>
+  <div class="main">
+    <a href="/"><img class="logo" src="https://s3.amazonaws.com/metamaps-assets/metacodes/generics/96px/gen_metamap.png" /></a>
+    <h1>Metamaps + Chat<br />= Metamapper</h1>
+    <p>
+        Add Metamapper to your team by submitting the login details for the bot here.
+    </p>
+    <% if (error) { %>
+        <p class="error">
+            Invalid details. Please try again.
+        </p>
+    <% } %>
+    <form action="/mattermost" method="POST">
+        <label for="server">Chat Server</label>
+        <input type="text" placeholder="https://yourchatserver.com" name="server">
+        <label for="email">Email</label>
+        <input type="text" name="email">
+        <label for="password">Password</label>
+        <input type="password" name="password">
+        <input class="submit" name="submit" type="submit" value="Add Metamapper Bot">
+    </form>
+  </div>
+</body>
+</html>

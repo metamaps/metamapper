@@ -39,12 +39,12 @@ function addTopicToMap(mapId, topic, token, cb) {
 function collectWhenTopics (context, config, cb) {
   const { rtmBot, facilitatorDM, tokens, user } = context
   const { linkedMap: { id, topics, permission } } = config
-  rtmBot.sendMessage(iT('en.buildingContext.collectFocalTopic.explainHasTopics'), facilitatorDM)
+  rtmBot.sendM(iT('en.buildingContext.collectFocalTopic.explainHasTopics'), facilitatorDM)
   const formatted = topics.map(t => {
     const metacode = Metamaps.findMetacodeByNameIdOrEmoji(t.metacode_id)
     return `(${t.id}) :${metacode[2]}: ${t.name}\n`
   }).join('')
-  rtmBot.sendMessage(formatted, facilitatorDM)
+  rtmBot.sendM(formatted, facilitatorDM)
   listenInChannel(rtmBot, facilitatorDM, function (err, message) {
     if (err) {
       cb(err)
@@ -73,7 +73,7 @@ function collectWhenTopics (context, config, cb) {
 function collectWhenNoTopics (context, config, cb) {
   const { rtmBot, facilitatorDM, user, tokens } = context
   const { linkedMap: { id, permission } } = config
-  rtmBot.sendMessage(iT('en.buildingContext.collectFocalTopic.explainNoTopics'), facilitatorDM)
+  rtmBot.sendM(iT('en.buildingContext.collectFocalTopic.explainNoTopics'), facilitatorDM)
   listenInChannel(rtmBot, facilitatorDM, function (err, message) {
     if (err) {
       cb(err)
@@ -109,8 +109,8 @@ module.exports.collectFocalTopic = collectFocalTopic
 function collectMetacode (context, config, cb) {
   const { rtmBot, facilitatorDM } = context
   const metacodes = Metamaps.metacodes.map(m => `:${m[2]}: ${m[0].toLowerCase()}`)
-  rtmBot.sendMessage(iT('en.buildingContext.collectMetacode.explain'), facilitatorDM)
-  rtmBot.sendMessage(metacodes.join(' '), facilitatorDM)
+  rtmBot.sendM(iT('en.buildingContext.collectMetacode.explain'), facilitatorDM)
+  rtmBot.sendM(metacodes.join(' '), facilitatorDM)
 
   function collect () {
     listenInChannel(rtmBot, facilitatorDM, function (err, message) {
@@ -122,7 +122,7 @@ function collectMetacode (context, config, cb) {
       if (metacode) {
         cb(null, metacode)
       } else {
-        rtmBot.sendMessage(iT('en.buildingContext.collectMetacode.tryAgain'), facilitatorDM)
+        rtmBot.sendM(iT('en.buildingContext.collectMetacode.tryAgain'), facilitatorDM)
         collect()
       }
     })
@@ -182,10 +182,10 @@ function main (context, configuration, cb) {
     })
     addTopicToMap(id, topic, tokens[userId], function (err, t) {
       if (err) {
-        rtmBot.sendMessage('There was an error creating that topic', err)
+        rtmBot.sendM('There was an error creating that topic', err)
         return
       }
-      rtmBot.sendMessage(iT('en.buildingContext.createdTopic'), dmId)
+      rtmBot.sendM(iT('en.buildingContext.createdTopic'), dmId)
       stats.counts.generatedTopics += 1
       configuration.linkedMap.topics.push(t)
       // create synapse to focalTopic
@@ -215,15 +215,15 @@ function main (context, configuration, cb) {
     const existingTopic = topics.find(t => t.id === parsedInt)
     collectMetacode(context, configuration, function (err, metacode) {
       if (err) {
-        rtmBot.sendMessage(iT('en.buildingContext.facilitatorSetTopicError'), facilitatorDM)
+        rtmBot.sendM(iT('en.buildingContext.facilitatorSetTopicError'), facilitatorDM)
         return
       }
       function complete(topic) {
         focalTopic = topic
         selectedMetacode = metacode
-        rtmBot.sendMessage(iT('en.buildingContext.facilitatorSetTopic'), facilitatorDM)
+        rtmBot.sendM(iT('en.buildingContext.facilitatorSetTopic'), facilitatorDM)
         Object.keys(dmIds).forEach(function (userId) {
-          rtmBot.sendMessage(iT('en.buildingContext.participantSetTopic', {
+          rtmBot.sendM(iT('en.buildingContext.participantSetTopic', {
             topicName: focalTopic.name,
             metacodeEmoji: selectedMetacode[2],
             metacodeName: selectedMetacode[0]
@@ -239,7 +239,7 @@ function main (context, configuration, cb) {
         }
         addTopicToMap(id, topic, tokens[user], function (err, t) {
           if (err) {
-            rtmBot.sendMessage('There was an error creating that topic', facilitatorDM)
+            rtmBot.sendM('There was an error creating that topic', facilitatorDM)
             return
           }
           configuration.linkedMap.topics.push(t)
@@ -252,20 +252,20 @@ function main (context, configuration, cb) {
   function setMetacode (name) {
     const metacode = Metamaps.findMetacodeByNameIdOrEmoji(name)
     if (metacode) {
-      rtmBot.sendMessage(iT('en.buildingContext.facilitatorSetMetacode', metacode), facilitatorDM)
+      rtmBot.sendM(iT('en.buildingContext.facilitatorSetMetacode', metacode), facilitatorDM)
       selectedMetacode = metacode
       Object.keys(dmIds).forEach(function (userId) {
-        rtmBot.sendMessage(iT('en.buildingContext.participantSetMetacode', metacode), dmIds[userId])
+        rtmBot.sendM(iT('en.buildingContext.participantSetMetacode', metacode), dmIds[userId])
       })
     } else {
-      rtmBot.sendMessage(iT('en.buildingContext.facilitatorNoMetacode'), facilitatorDM)
+      rtmBot.sendM(iT('en.buildingContext.facilitatorNoMetacode'), facilitatorDM)
     }
   }
   function unsetTopic () {
     focalTopic = null
-    rtmBot.sendMessage(iT('en.buildingContext.facilitatorUnsetTopic'), facilitatorDM)
+    rtmBot.sendM(iT('en.buildingContext.facilitatorUnsetTopic'), facilitatorDM)
     Object.keys(dmIds).forEach(function (userId) {
-      rtmBot.sendMessage(iT('en.buildingContext.participantUnsetTopic'), dmIds[userId])
+      rtmBot.sendM(iT('en.buildingContext.participantUnsetTopic'), dmIds[userId])
     })
   }
   function facilitatorCheckMessage (message) {
@@ -293,13 +293,13 @@ function main (context, configuration, cb) {
 
   // offer instructions to the facilitator
   // and inform that the participants have kicked off with the initial topic and responses
-  rtmBot.sendMessage(iT('en.buildingContext.facilitatorCommands'), facilitatorDM)
-  rtmBot.sendMessage(iT('en.buildingContext.facilitatorExplain'), facilitatorDM)
+  rtmBot.sendM(iT('en.buildingContext.facilitatorCommands'), facilitatorDM)
+  rtmBot.sendM(iT('en.buildingContext.facilitatorExplain'), facilitatorDM)
 
   // offer the initial topic to the participants
   Object.keys(dmIds).forEach(function (userId) {
-    rtmBot.sendMessage(iT('en.buildingContext.participantInitialTopic', focalTopic), dmIds[userId])
-    rtmBot.sendMessage(iT('en.buildingContext.participantInitialMetacode', selectedMetacode), dmIds[userId])
+    rtmBot.sendM(iT('en.buildingContext.participantInitialTopic', focalTopic), dmIds[userId])
+    rtmBot.sendM(iT('en.buildingContext.participantInitialMetacode', selectedMetacode), dmIds[userId])
   })
 
   // setup function to close out the whole process
