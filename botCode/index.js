@@ -40,7 +40,7 @@ async function setup (serverType, botConfig, tokens, mmUserIds, channelSettings,
           console.log(err)
           return
         }
-        rtmBot.send(`You haven\'t authenticated yet, please go to ${authUrl}?id=${id}`, dmId)
+        rtmBot.sendM(`You haven\'t authenticated yet, please go to ${authUrl}?id=${id}`, dmId)
       })
       return false
     }
@@ -75,7 +75,7 @@ async function setup (serverType, botConfig, tokens, mmUserIds, channelSettings,
           console.log(err)
           return
         }
-        rtmBot.send('Nice! You are now authorized with metamaps.', dmId)
+        rtmBot.sendM('Nice! You are now authorized with metamaps.', dmId)
       })
     },
     addMmUserId: function addMmUserId(mmUserId, userId) {

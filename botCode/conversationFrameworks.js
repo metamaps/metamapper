@@ -36,7 +36,7 @@ const bold = module.exports.bold = (text) => {
 
 function yesNoQstn (rtm, channel, question, yes, no, dontMessage) {
   function send(text) {
-    rtm.send(text, channel)
+    rtm.sendM(text, channel)
   }
   if (!dontMessage) send(question + instructions)
   rtm.once(RTM_EVENTS.MESSAGE, (message) => {

@@ -6,13 +6,13 @@ const ChannelSetting = require('./models/ChannelSetting')
 const bots = {}
 
 // setup a function for persisting channel settings
-function persistChannelSetting (type, id, channelSettings, channelId, mapId, metacodeId, capture) {
+function persistChannelSetting (serverType, id, channelSettings, channelId, mapId, metacodeId, capture) {
   let channelSetting = channelSettings.find(cS => cS.get('channel_id') === channelId)
   if (!channelSetting) {
     channelSetting = new ChannelSetting({
       channel_id: channelId,
       team_id: id,
-      server_type: type
+      server_type: serverType
     })
     channelSettings.push(channelSetting)
   }
@@ -23,11 +23,11 @@ function persistChannelSetting (type, id, channelSettings, channelId, mapId, met
 }
 
 // setup a function which will spin up a bot for a team
-async function startBot(type, botConfig, tokens = {}, mmUserIds = {}, channelSettings = []) {
+async function startBot(serverType, botConfig, tokens = {}, mmUserIds = {}, channelSettings = []) {
   let id
-  if (type === 'slack') {
+  if (serverType === 'slack') {
     id = botConfig.get('team_id')
-  } else if (type === 'mattermost') {
+  } else if (serverType === 'mattermost') {
     id = botConfig._id
   }
 
@@ -41,12 +41,12 @@ async function startBot(type, botConfig, tokens = {}, mmUserIds = {}, channelSet
   })
   try {
     bots[id] = await metamapBot.setup(
-      type,
+      serverType,
       botConfig,
       tokens,
       mmUserIds,
       channelSettingsObj,
-      apply(persistChannelSetting, type, id, channelSettings)
+      apply(persistChannelSetting, serverType, id, channelSettings)
     )
   } catch (err) {
     console.error(err)

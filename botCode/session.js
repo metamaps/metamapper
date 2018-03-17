@@ -10,7 +10,7 @@ const processes = require('./processes')
 
 function collectTitle (context, cb) {
   const { rtmBot, facilitatorDM } = context
-  rtmBot.send(iT('en.session.collectTitle'), facilitatorDM)
+  rtmBot.sendM(iT('en.session.collectTitle'), facilitatorDM)
   listenInChannel(rtmBot, facilitatorDM, function (err, message) {
     if (err) {
       cb(err)
@@ -29,7 +29,7 @@ module.exports.collectTitle = collectTitle
 
 function collectDescription (context, cb) {
   const { rtmBot, facilitatorDM } = context
-  rtmBot.send(iT('en.session.collectDescription'), facilitatorDM)
+  rtmBot.sendM(iT('en.session.collectDescription'), facilitatorDM)
   listenInChannel(rtmBot, facilitatorDM, function (err, message) {
     if (err) {
       cb(err)
@@ -48,7 +48,7 @@ module.exports.collectDescription = collectDescription
 
 function collectChannel (context, cb) {
   const { rtmBot, facilitatorDM } = context
-  rtmBot.send(iT('en.session.collectChannel.explain'), facilitatorDM)
+  rtmBot.sendM(iT('en.session.collectChannel.explain'), facilitatorDM)
   function collect () {
     listenInChannel(rtmBot, facilitatorDM, function (err, message) {
       if (err) {
@@ -69,7 +69,7 @@ function collectChannel (context, cb) {
         name
       }
       if (!result.id) {
-        rtmBot.send(iT('en.session.collectChannel.tryAgain'), facilitatorDM)
+        rtmBot.sendM(iT('en.session.collectChannel.tryAgain'), facilitatorDM)
         collect()
         return
       }
@@ -108,7 +108,7 @@ function collectMap (context, cb) {
       return
     }
     if (message.text === 'new') {
-      rtmBot.send(iT('en.session.collectMap.willCreate'), facilitatorDM)
+      rtmBot.sendM(iT('en.session.collectMap.willCreate'), facilitatorDM)
       // special case, call back with just 'new-map' for map value
       // it will be created later in the flow with session title and description
       cb(null, NEW_MAP_FLAG)
@@ -119,23 +119,23 @@ function collectMap (context, cb) {
     const mapId = partsArray[partsArray.length - 1]
     Metamaps.getMap(mapId, tokens[user], function (err, map) {
       if (err) {
-        rtmBot.send('There was an error trying to fetch the selected map', facilitatorDM)
+        rtmBot.sendM('There was an error trying to fetch the selected map', facilitatorDM)
         cb(err)
         return
       }
       const msg = iT('en.session.collectMap.acknowledgeMap', { mapName: map.name })
-      rtmBot.send(msg, facilitatorDM)
+      rtmBot.sendM(msg, facilitatorDM)
       cb(null, map)
     })
   })
   interactiveCallbackId = collectMapResponse(context, facilitatorDM, function (err, value) {
     responseListenerCancel()
     if (err) {
-      rtmBot.send('There was an error trying to select a map', facilitatorDM)
+      rtmBot.sendM('There was an error trying to select a map', facilitatorDM)
       // TODO: what?
     }
     if (value === NEW_MAP_FLAG) {
-      rtmBot.send(iT('en.session.collectMap.willCreate'), facilitatorDM)
+      rtmBot.sendM(iT('en.session.collectMap.willCreate'), facilitatorDM)
       // special case, call back with just 'new-map' for map value
       // it will be created later in the flow with session title and description
       cb(null, NEW_MAP_FLAG)
@@ -147,7 +147,7 @@ module.exports.collectMap = collectMap
 
 function collectParticipants (context, cb) {
   const { rtmBot, facilitatorDM, user, tokens, sessionType } = context
-  rtmBot.send(iT('en.session.collectParticipants.explain'), facilitatorDM)
+  rtmBot.sendM(iT('en.session.collectParticipants.explain'), facilitatorDM)
   function collect () {
     listenInChannel(rtmBot, facilitatorDM, function (err, message) {
       if (err) {
@@ -173,7 +173,7 @@ function collectParticipants (context, cb) {
       } else {
         webBot.channelMembers(channelId, function (err, members) {
           if (err) {
-            rtmBot.send(iT('en.session.collectParticipants.failure'), facilitatorDM)
+            rtmBot.sendM(iT('en.session.collectParticipants.failure'), facilitatorDM)
             collect()
             return
           }
@@ -193,7 +193,7 @@ function collectParticipants (context, cb) {
         }
 
         if (!participantIds.length) {
-          rtmBot.send(iT('en.session.collectParticipants.tryAgain'), facilitatorDM)
+          rtmBot.sendM(iT('en.session.collectParticipants.tryAgain'), facilitatorDM)
           collect()
           return
         }
@@ -215,7 +215,7 @@ function useOrCreateMap (context, config, cb) {
     }
     Metamaps.createMap(newMap, tokens[user], function (err, map) {
       if (err) {
-        rtmBot.send('There was an error creating the map for the session', facilitatorDM)
+        rtmBot.sendM('There was an error creating the map for the session', facilitatorDM)
         cb(err)
         return
       }
@@ -231,7 +231,7 @@ module.exports.useOrCreateMap = useOrCreateMap
 
 function startOrCancel (context, config, cb) {
   const { rtmBot, facilitatorDM } = context
-  rtmBot.send(iT('en.session.startOrCancel.explain'), facilitatorDM)
+  rtmBot.sendM(iT('en.session.startOrCancel.explain'), facilitatorDM)
   // loop without re-explaining
   function collect () {
     listenInChannel(rtmBot, facilitatorDM, function (err, message) {
@@ -244,7 +244,7 @@ function startOrCancel (context, config, cb) {
         return
       }
       if (message.text === 'cancel') {
-        rtmBot.send(iT('en.session.startOrCancel.canceled'), facilitatorDM)
+        rtmBot.sendM(iT('en.session.startOrCancel.canceled'), facilitatorDM)
         // use this special err code for early exits
         cb('canceled')
       } else if (message.text === 'start') {
@@ -265,7 +265,7 @@ function configureSession (context, cb) {
     facilitatorDM
   }
   const newContext = Object.assign({}, context, { facilitatorDM })
-  rtmBot.send(iT('en.session.facilitatorOverview'), facilitatorDM)
+  rtmBot.sendM(iT('en.session.facilitatorOverview'), facilitatorDM)
   waterfall([
       function (finished) {
         series({
@@ -330,8 +330,8 @@ function runSession (context, configuration, cb) {
     participantIds
   } = configuration
   const linkedChannelId = linkedChannel.id
-  rtmBot.send(iT('en.session.channelSessionStarting', configuration), linkedChannelId)
-  rtmBot.send(iT('en.session.facilitatorSessionStarting', configuration), facilitatorDM)
+  rtmBot.sendM(iT('en.session.channelSessionStarting', configuration), linkedChannelId)
+  rtmBot.sendM(iT('en.session.facilitatorSessionStarting', configuration), facilitatorDM)
   // TODO: make sure all users have created and linked metamaps accounts
   // TODO: allow participants at any time to leave
   getDmIds(context, participantIds, function (err, dmIds) {
@@ -341,16 +341,16 @@ function runSession (context, configuration, cb) {
     }
     // message each participant in a DM
     Object.keys(dmIds).forEach(function (userId) {
-      rtmBot.send(iT('en.session.participantSessionStarting', configuration), dmIds[userId])
-      rtmBot.send(iT('en.session.participantSessionDescription', configuration), dmIds[userId])
+      rtmBot.sendM(iT('en.session.participantSessionStarting', configuration), dmIds[userId])
+      rtmBot.sendM(iT('en.session.participantSessionDescription', configuration), dmIds[userId])
     })
     const newContext = Object.assign({}, context, { dmIds })
     function announce (message) {
       if (!message.text.startsWith('announce: ')) return
-      rtmBot.send(iT('en.session.facilitatorAnnounce'), facilitatorDM)
+      rtmBot.sendM(iT('en.session.facilitatorAnnounce'), facilitatorDM)
       const text = message.text.slice(10)
       Object.keys(dmIds).forEach(function (userId) {
-        rtmBot.send(iT('en.session.announcement', { text }), dmIds[userId])
+        rtmBot.sendM(iT('en.session.announcement', { text }), dmIds[userId])
       })
     }
     const cancelAnnounce = listenInChannelTillCancel(context, facilitatorDM, announce)
@@ -371,18 +371,18 @@ function closeSession (context, configuration, result, dmIds, cb) {
   const { process, rtmBot } = context
   const { facilitatorDM, linkedChannel } = configuration
   const linkedChannelId = linkedChannel.id
-  rtmBot.send(iT('en.session.facilitatorSessionClosed', {channelId: linkedChannelId}), facilitatorDM)
+  rtmBot.sendM(iT('en.session.facilitatorSessionClosed', {channelId: linkedChannelId}), facilitatorDM)
   // message each participant in a DM
   Object.keys(dmIds).forEach(function (userId) {
-    rtmBot.send(iT('en.session.participantSessionClosed', {channelId: linkedChannelId}), dmIds[userId])
+    rtmBot.sendM(iT('en.session.participantSessionClosed', {channelId: linkedChannelId}), dmIds[userId])
   })
   process.formatResults(result, function (err, formatted) {
     if (err) {
       cb(err)
       return
     }
-    rtmBot.send(iT('en.session.channelResults', configuration), linkedChannelId)
-    rtmBot.send(formatted, linkedChannelId)
+    rtmBot.sendM(iT('en.session.channelResults', configuration), linkedChannelId)
+    rtmBot.sendM(formatted, linkedChannelId)
     cb(null, configuration, result)
   })
 }
@@ -393,7 +393,7 @@ function run (context, cb) {
   const { channel, isDm, rtmBot, webBot, sessionType, user } = context
   // if not a one-on-one DM, move to one-on-one DM with that user for config
   if (!isDm) {
-    rtmBot.send(iT('en.session.moveToDM'), channel)
+    rtmBot.sendM(iT('en.session.moveToDM'), channel)
   }
   webBot.dm(user, function (err, dm) {
     if (err) {

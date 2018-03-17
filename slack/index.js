@@ -42,7 +42,8 @@ async function startSlackBot(slack) {
 
     rtmBot.MESSAGE_EVENT = RTM_EVENTS.MESSAGE
     rtmBot.REACTION_EVENT = RTM_EVENTS.REACTION_ADDED
-    rtmBot.send = rtmBot.sendMessage
+    rtmBot.sendM = rtmBot.sendMessage
+
     rtmBot.isDm = (message, cb = () => {}) => {
         const channelIsh = rtmBot.dataStore.getChannelGroupOrDMById(message.channel)
         cb(null, channelIsh._modelName === 'DM')
@@ -77,7 +78,7 @@ async function startSlackBot(slack) {
             .catch(err => cb(err))
     }
     webBot.dm = (userId, cb = () => {}) => {
-        const channel = webBot.dataStore.getDMByName(dataStore.getUserById(userId).name)
+        const channel = dataStore.getDMByName(dataStore.getUserById(userId).name)
         if (channel) {
             cb(null, channel.id)
             return

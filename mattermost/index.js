@@ -93,7 +93,7 @@ function createWsClient(webClient, connectionUrl, token, activeTeamId, activeUse
             .map(ecb => ecb.fn)
             .forEach(fn => fn(transformEvent(event)))
     })
-    wsClient.send = (message, channel_id) => {
+    wsClient.sendM = (message, channel_id) => {
         webClient.createPost({
             message,
             channel_id

@@ -12,7 +12,7 @@ module.exports.configure = configure
 
 function collectResponseForParticipant (context, total, userId, memo, participant, cb) {
   const { rtmBot, dmIds } = context
-  rtmBot.send(`How well do you know <@${participant}>?`, dmIds[userId])
+  rtmBot.sendM(`How well do you know <@${participant}>?`, dmIds[userId])
   function collect () {
     listenInChannel(rtmBot, dmIds[userId], function (err, message) {
       if (err) {
@@ -21,7 +21,7 @@ function collectResponseForParticipant (context, total, userId, memo, participan
       }
       // TODO: validate response
       /*if (!) {
-        rtmBot.send(iT('en.session.collectParticipants.failure'), dmIds[userId])
+        rtmBot.sendM(iT('en.session.collectParticipants.failure'), dmIds[userId])
         collect()
         return
       }*/
@@ -70,7 +70,7 @@ function main (context, configuration, cb) {
   parallel(allButFacilitator.map(userId =>
     function (finished) {
       const allButUser = participantIds.filter(p => p !== userId)
-      rtmBot.send(iT('en.networkMapping.participantWillStart'), dmIds[userId])
+      rtmBot.sendM(iT('en.networkMapping.participantWillStart'), dmIds[userId])
       // collect a response for each other participant from the user, one at a time,
       // into an array using async/reduce
       reduce(
@@ -83,7 +83,7 @@ function main (context, configuration, cb) {
             finished(err)
             return
           }
-          rtmBot.send(iT('en.networkMapping.participantFinished'), dmIds[userId])
+          rtmBot.sendM(iT('en.networkMapping.participantFinished'), dmIds[userId])
           finished(null, {
             userId,
             responses

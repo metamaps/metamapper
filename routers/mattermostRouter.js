@@ -20,7 +20,7 @@ router.post('/mattermost', async function (req, res) {
         // save the user
         const mattermost = new Mattermost({server, email, password})
         mattermost.save()
-        startBot(mattermost)
+        startBot('mattermost', mattermost)
         res.redirect('/mattermost-success')
     }
 })

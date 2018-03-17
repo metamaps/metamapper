@@ -44,7 +44,7 @@ router.get('/slack/confirm', function (req, res) {
       })
       team.save()
       // boot up the bot in the new team right away
-      startBot(team)
+      startBot('slack', team)
       // respond with the success "bot added to workspace" page
       res.render('pages/added-to-team')
     })
