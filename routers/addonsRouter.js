@@ -88,7 +88,7 @@ router.post('/slack-special-endpoint-123', function (req, res) {
   //MetaHolo
   if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source === "MetaHolo" && event.subtype !== "message_changed"){
     request.post({
-      url: 'https://maker.ifttt.com/trigger/MetaHolo/with/key/dDAh9bqkTvtTbfTmo6DDxL',
+      url: 'https://maker.ifttt.com/trigger/MetaHolo/with/key/hh-WIsHemQcfoom10g493hQM9KqTQVcYf_aCNQmJj_v',
       form: {
         'value1': link,
         'value2': title,
