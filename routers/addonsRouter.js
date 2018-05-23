@@ -10,6 +10,33 @@ router.get('/added-to-team', function (req, res) {
   res.render('pages/added-to-team')
 })
 
+router.post('/webhooks/zoom', function (req, res) {
+  const coworkingID = 6475679423
+  res.send('ok')
+  const { event } = req.body
+  const { meeting } = req.body.payload
+  let event_text
+  // ignore rooms besides 'coworking' for now
+  if (meeting.id === coworkingID){
+    if (event === 'participant_joined') {
+      event_text = `${meeting.participant.user_name} joined the coworking room`
+    } else if (event === 'participant_left') {
+      event_text = `${meeting.participant.user_name} left the coworking room`
+    }
+  }
+
+  // if its a relevant event, pass along to the mattermost server
+  if (event_text) {
+    request.post({
+      uri: process.env.MATTERMOST_WEBHOOK,
+      body: {
+        text: event_text
+      },
+      json: true
+    })
+  }
+})
+
 // This is a random endpoint that is currently being used by Robert Best
 // TODO: factor this out!
 router.post('/slack-special-endpoint-123', function (req, res) {
