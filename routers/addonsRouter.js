@@ -19,9 +19,9 @@ router.post('/webhooks/zoom', function (req, res) {
   // ignore rooms besides 'coworking' for now
   if (meeting.id === coworkingID){
     if (event === 'participant_joined') {
-      event_text = `${meeting.participant.user_name} joined the coworking room`
+      event_text = `${meeting.participant.user_name} joined the co-working space`
     } else if (event === 'participant_left') {
-      event_text = `${meeting.participant.user_name} left the coworking room`
+      event_text = `${meeting.participant.user_name} left the co-working space`
     }
   }
 
@@ -30,7 +30,9 @@ router.post('/webhooks/zoom', function (req, res) {
     request.post({
       uri: process.env.MATTERMOST_WEBHOOK,
       body: {
-        text: event_text
+        text: event_text,
+        icon_url: 'https://d24cgw3uvb9a9h.cloudfront.net/zoom.ico',
+        username: 'Zoombot'
       },
       json: true
     })
