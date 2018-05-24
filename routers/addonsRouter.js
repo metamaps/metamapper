@@ -2,6 +2,7 @@ const request = require('request')
 const path = require('path')
 const express = require('express')
 const router = express.Router()
+var guestList = []
 
 router.get('/authed', function (req, res) {
   res.render('pages/user-authenticated')
@@ -19,9 +20,12 @@ router.post('/webhooks/zoom', function (req, res) {
   // ignore rooms besides 'coworking' for now
   if (meeting.id === coworkingID){
     if (event === 'participant_joined') {
-      event_text = `${meeting.participant.user_name} joined the co-working space`
+      guestList.push(meeting.participant.user_name)
+      event_text = `**${meeting.participant.user_name}** entered the co-working space. ${guestList.length} others are there: {${guestList.join()}}`
     } else if (event === 'participant_left') {
-      event_text = `${meeting.participant.user_name} left the co-working space`
+      let index = guestList.indexOf(meeting.participant.user_name)
+      if (index !== -1) guestList.splice(index, 1);
+      event_text = false //`*${meeting.participant.user_name}* left the co-working space`
     }
   }
 
