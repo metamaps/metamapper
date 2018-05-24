@@ -20,8 +20,8 @@ router.post('/webhooks/zoom', function (req, res) {
   // ignore rooms besides 'coworking' for now
   if (meeting.id === coworkingID){
     if (event === 'participant_joined') {
-      guestList.push(meeting.participant.user_name)
       event_text = `**${meeting.participant.user_name}** entered the co-working space. ${guestList.length} others are there: {${guestList.join()}}`
+      guestList.push(meeting.participant.user_name)
     } else if (event === 'participant_left') {
       let index = guestList.indexOf(meeting.participant.user_name)
       if (index !== -1) guestList.splice(index, 1);
