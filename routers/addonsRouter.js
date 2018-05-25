@@ -12,7 +12,7 @@ router.get('/added-to-team', function (req, res) {
 })
 
 router.post('/webhooks/zoom', function (req, res) {
-  const coworkingID = 6652790462
+  const coworkingID = 860438565
   res.send('ok')
   const { event } = req.body
   const { meeting } = req.body.payload
