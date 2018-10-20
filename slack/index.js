@@ -77,6 +77,7 @@ async function startSlackBot(slack) {
             .then(res => cb(null, res))
             .catch(err => cb(err))
     }
+    webBot.dmX = webBot.dm
     webBot.dm = (userId, cb = () => {}) => {
         const user = dataStore.getUserById(userId) || {}
         const channel = dataStore.getDMByName(user.name)
@@ -84,7 +85,7 @@ async function startSlackBot(slack) {
             cb(null, channel.id)
             return
         }
-        webBot.dm.open(userId)
+        webBot.dmX.open(userId)
             .then(response => cb(null, response.channel.id))
             .catch(err => cb(err))
     }
