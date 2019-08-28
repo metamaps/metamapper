@@ -107,7 +107,7 @@ router.post('/slack-special-endpoint-123', function (req, res) {
   }
 
   //commonsify
-  if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source === "commonsify" && event.subtype !== "message_changed"){
+  if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source.substring(0,9) === "commonsify" && event.subtype !== "message_changed"){
     request.post({
       url: 'https://maker.ifttt.com/trigger/commonsify_feed/with/key/dDAh9bqkTvtTbfTmo6DDxL',
       form: {
@@ -119,9 +119,21 @@ router.post('/slack-special-endpoint-123', function (req, res) {
   }
 
   //MetaHolo
-  if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source === "MetaHolo" && event.subtype !== "message_changed"){
+  if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source.substring(0,7) === "MetaHolo" && event.subtype !== "message_changed"){
     request.post({
       url: 'https://maker.ifttt.com/trigger/MetaHolo/with/key/hh-WIsHemQcfoom10g493hQM9KqTQVcYf_aCNQmJj_v',
+      form: {
+        'value1': link,
+        'value2': title,
+        'value3': nuzzelData
+      }
+    })
+  }
+
+  //sensemakemap
+  if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source.substring(0,11) === "sensemakemap" && event.subtype !== "message_changed"){
+    request.post({
+      url: 'https://maker.ifttt.com/trigger/sensemakemap/with/key/oKXTJcUdTA4BYpAgkaqvgSyAWGxI94rTkPMOcOUrtKY',
       form: {
         'value1': link,
         'value2': title,
@@ -144,9 +156,9 @@ router.post('/slack-special-endpoint-123', function (req, res) {
   }
 
   //futurutuf
-  if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source === "futurutuf" && event.subtype !== "message_changed"){
+  if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source.substring(0,8) === "futurutuf" && event.subtype !== "message_changed"){
     request.post({
-      url: 'https://maker.ifttt.com/trigger/futurutuf/with/key/dDAh9bqkTvtTbfTmo6DDxL',
+      url: 'https://maker.ifttt.com/trigger/futurutuf/with/key/breqtQWExd3RoUcoIGxKno',
       form: {
         'value1': link,
         'value2': title,
