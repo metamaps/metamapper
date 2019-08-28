@@ -131,7 +131,7 @@ router.post('/slack-special-endpoint-123', function (req, res) {
   }
 
   //sensemakemap
-  if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source.substring(0,11) === "sensemakemap" && event.subtype !== "message_changed"){
+  if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source.substring(0,11) === "SenseMakeMap" && event.subtype !== "message_changed"){
     request.post({
       url: 'https://maker.ifttt.com/trigger/sensemakemap/with/key/oKXTJcUdTA4BYpAgkaqvgSyAWGxI94rTkPMOcOUrtKY',
       form: {
