@@ -2,12 +2,45 @@ const request = require('request')
 const path = require('path')
 const express = require('express')
 const router = express.Router()
+var guestList = []
 
 router.get('/authed', function (req, res) {
   res.render('pages/user-authenticated')
 })
 router.get('/added-to-team', function (req, res) {
   res.render('pages/added-to-team')
+})
+
+router.post('/webhooks/zoom', function (req, res) {
+  const coworkingID = 860438565
+  res.send('ok')
+  const { event } = req.body
+  const { meeting } = req.body.payload
+  let event_text
+  // ignore rooms besides 'coworking' for now
+  if (meeting.id === coworkingID){
+    if (event === 'participant_joined') {
+      event_text = `**${meeting.participant.user_name}** entered the co-working space. ${guestList.length} others are there: {${guestList.join()}}`
+      guestList.push(meeting.participant.user_name)
+    } else if (event === 'participant_left') {
+      let index = guestList.indexOf(meeting.participant.user_name)
+      if (index !== -1) guestList.splice(index, 1);
+      event_text = false //`*${meeting.participant.user_name}* left the co-working space`
+    }
+  }
+
+  // if its a relevant event, pass along to the mattermost server
+  if (event_text) {
+    request.post({
+      uri: process.env.MATTERMOST_WEBHOOK,
+      body: {
+        text: event_text,
+        icon_url: 'https://d24cgw3uvb9a9h.cloudfront.net/zoom.ico',
+        username: 'Zoombot'
+      },
+      json: true
+    })
+  }
 })
 
 // This is a random endpoint that is currently being used by Robert Best
@@ -74,7 +107,7 @@ router.post('/slack-special-endpoint-123', function (req, res) {
   }
 
   //commonsify
-  if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source === "commonsify" && event.subtype !== "message_changed"){
+  if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source.substring(0,9) === "commonsify" && event.subtype !== "message_changed"){
     request.post({
       url: 'https://maker.ifttt.com/trigger/commonsify_feed/with/key/dDAh9bqkTvtTbfTmo6DDxL',
       form: {
@@ -86,9 +119,21 @@ router.post('/slack-special-endpoint-123', function (req, res) {
   }
 
   //MetaHolo
-  if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source === "MetaHolo" && event.subtype !== "message_changed"){
+  if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source.substring(0,7) === "MetaHolo" && event.subtype !== "message_changed"){
     request.post({
-      url: 'https://maker.ifttt.com/trigger/MetaHolo/with/key/dDAh9bqkTvtTbfTmo6DDxL',
+      url: 'https://maker.ifttt.com/trigger/MetaHolo/with/key/hh-WIsHemQcfoom10g493hQM9KqTQVcYf_aCNQmJj_v',
+      form: {
+        'value1': link,
+        'value2': title,
+        'value3': nuzzelData
+      }
+    })
+  }
+
+  //sensemakemap
+  if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source.substring(0,11) === "SenseMakeMap" && event.subtype !== "message_changed"){
+    request.post({
+      url: 'https://maker.ifttt.com/trigger/sensemakemap/with/key/oKXTJcUdTA4BYpAgkaqvgSyAWGxI94rTkPMOcOUrtKY',
       form: {
         'value1': link,
         'value2': title,
@@ -111,9 +156,9 @@ router.post('/slack-special-endpoint-123', function (req, res) {
   }
 
   //futurutuf
-  if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source === "futurutuf" && event.subtype !== "message_changed"){
+  if (event && event.text !== null && req.body.team_id === teamId && event.channel === torss && source.substring(0,8) === "futurutuf" && event.subtype !== "message_changed"){
     request.post({
-      url: 'https://maker.ifttt.com/trigger/futurutuf/with/key/dDAh9bqkTvtTbfTmo6DDxL',
+      url: 'https://maker.ifttt.com/trigger/futurutuf/with/key/breqtQWExd3RoUcoIGxKno',
       form: {
         'value1': link,
         'value2': title,
