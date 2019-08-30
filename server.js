@@ -25,7 +25,6 @@ const { startBot } = require('./bots')
 const metamapsRouter = require('./routers/metamapsRouter')
 const slackRouter = require('./routers/slackRouter')
 const mattermostRouter = require('./routers/mattermostRouter')
-const addonsRouter = require('./routers/addonsRouter')
 
 // make sure that you configure the DB environment variable with a valid mongodb url
 mongoose.connect(process.env.DB)
