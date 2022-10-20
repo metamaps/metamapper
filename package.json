@@ -17,7 +17,7 @@
     "isomorphic-fetch": "^2.2.1",
     "mattermost-redux": "Connoropolous/mattermost-redux",
     "minimal-metainspector": "1.1.1",
-    "mongoose": "^4.4.8",
+    "mongoose": "^4.13.21",
     "remote-redux-devtools": "^0.5.12",
     "request": "^2.69.0",
     "url": "^0.11.0",
